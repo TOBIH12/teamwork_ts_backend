@@ -11,19 +11,19 @@ describe('Create User Endpoint', () => {
        const res = await request(app)
        .post('/api/v1/users/admin/createUser')
        .send({
-           firstname: 'Joe',
+           firstname: 'Jane',
            lastname: 'Doe',
-           email: 'joe@gmail.com',
+           email: 'jane@gmail.com',
            password: 'password123',
-           gender: 'male',
+           gender: 'female',
            jobrole: 'employee',
-           department: 'engineering',
+           department: 'communications',
            address: '123 Main St'
        });
                 expect(res.status).to.equal(201);
                 expect(res.body).to.be.an('object');
                 expect(res.body).to.have.property('status', 'success');
-                expect(res.body.data).to.have.property('message').that.includes('User Joe Doe created successfully');
+                expect(res.body.data).to.have.property('message').that.includes('User Jane Doe created successfully');
                 expect(res.body.data).to.have.property('id');
                 expect(res.body.data).to.have.property('jobrole', 'employee');
                

@@ -3,6 +3,7 @@ import { Request, Response, NextFunction } from 'express';
 import pool from '../../db';
 import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
+import { checkEmailQuery, insertUserQuery } from '../../queries/users.queries';
 
 dotenv.config();
 
@@ -22,7 +23,7 @@ export const createUser = async (req: Request, res: Response, next: NextFunction
 
          const newEmail = email.toLowerCase();
 
-         const emailExists = await pool.query('SELECT * FROM "userModel" WHERE email = $1', [newEmail]);
+         const emailExists = await pool.query(checkEmailQuery, [newEmail]);
          console.log('Email exists check:', emailExists.rows);
 
          if(emailExists.rows && emailExists.rows.length > 0) {
@@ -36,7 +37,7 @@ export const createUser = async (req: Request, res: Response, next: NextFunction
          const salt = await bcrypt.genSalt(10);
          const hashedPassword = await bcrypt.hash(password, salt);
 
-         const insertUserQuery = 'INSERT INTO "userModel" (firstName, lastName, email, password, gender, jobrole, department, address) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *';
+         
 
          const insertUserValues = [firstname, lastname, newEmail, hashedPassword, gender, jobrole, department, address];
 
