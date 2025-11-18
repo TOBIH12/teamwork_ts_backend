@@ -6,12 +6,6 @@ import HttpError from '../errorModel'
 dotenv.config();
 
 
-// interface JwtPayload {
-//     userID: number;
-//     firstname: string;
-//     email: string;
-//     jobrole: string;
-// }
 
 interface AuthRequest extends Request {
   user?: any;
@@ -27,9 +21,14 @@ interface AuthRequest extends Request {
         // Extract the token from the Authorization header
         
        const token = authHeader.split(" ")[1];
+       
         jwt.verify(token, process.env.JWT_SECRET as string, (error, info) =>{
-            if(error){
-                return next(new HttpError('Unathorized. Invalid token', 403))
+            if(error?.name === 'TokenExpiredError'){
+                console.error(error);
+                return next(new HttpError('Unauthorized, expired token', 403))
+            } else if (error) {
+                console.error(error);
+                return next(new HttpError('Unauthorized, invalid token', 401))
             }
 
             req.user = info;
