@@ -2,12 +2,12 @@ import express, { Request, Response } from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import upload from 'express-fileupload';
-import pool from './db';
+import usersV1 from './routes/v1/usersRoutes';
 
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+// const PORT = process.env.PORT || 5000;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -19,16 +19,7 @@ app.use(upload(
 ));
 app.use(cors());
 
-
-
-
-pool.connect()
-.then(() => console.log('Connected to the postGreSql database!'))
-.catch((err) => console.error('Database connection error', err.stack));
-
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+app.use('/api/v1/users', usersV1);
 
 
 export default app;
