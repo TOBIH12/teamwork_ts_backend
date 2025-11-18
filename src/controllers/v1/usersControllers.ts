@@ -4,7 +4,7 @@ import pool from '../../db';
 import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
-import { checkEmailQuery, insertUserQuery, findUserQuery } from '../../queries/users.queries';
+import { checkEmailQuery, insertUserQuery } from '../../queries/users.queries';
 
 dotenv.config();
 
@@ -86,7 +86,7 @@ export const signInUser = async (req: Request, res: Response, next: NextFunction
 
     const userEmail = email.toLowerCase();
 
-    const findUser = await pool.query(findUserQuery, [userEmail]);
+    const findUser = await pool.query(checkEmailQuery, [userEmail]);
 
       if(!findUser.rows || findUser.rows.length === 0) {
          return next(new HttpError('Invalid credentials', 401));
