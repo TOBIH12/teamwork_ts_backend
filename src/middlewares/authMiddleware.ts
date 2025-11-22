@@ -1,44 +1,44 @@
 import jwt from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
 import dotenv from 'dotenv';
-import HttpError from '../errorModel'
+import HttpError from '../errorModel';
 
 dotenv.config();
 
-
-
 interface AuthRequest extends Request {
-  user?: any;
+  user?: Record<string, unknown>;
 }
 
+const authMiddleware = (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  const authHeader = req.headers.authorization;
 
- const authMiddleware = (req: AuthRequest, res: Response, next: NextFunction) => {
-    const authHeader = req.headers.authorization; // lowercase is standard
+  if (
+    authHeader &&
+    typeof authHeader === 'string' &&
+    authHeader.startsWith('Bearer ')
+  ) {
+    // Extract the token from the Authorization header
 
- // Check if Authorization header is present and starts with 'Bearer'
+    const token = authHeader.split(' ')[1];
 
- if(authHeader && typeof authHeader === "string" && authHeader.startsWith("Bearer ")) {
-        // Extract the token from the Authorization header
-        
-       const token = authHeader.split(" ")[1];
-       
-        jwt.verify(token, process.env.JWT_SECRET as string, (error, info) =>{
-            if(error?.name === 'TokenExpiredError'){
-                console.error(error);
-                return next(new HttpError('Unauthorized, expired token', 403))
-            } else if (error) {
-                console.error(error);
-                return next(new HttpError('Unauthorized, invalid token', 401))
-            }
+    jwt.verify(token, process.env.JWT_SECRET as string, (error, info) => {
+      if (error?.name === 'TokenExpiredError') {
+        res.send(new HttpError('Session expired. Please sign in again', 401));
+      }
+      if (error) {
+        res.send(new HttpError('Unathorized. Invalid token', 401));
+      }
 
-            req.user = info;
-            next()
-        })
-    } else {
-        return next(new HttpError('Unathorized. No token', 402))
-    }
-
-}
-
+      req.user = info as Record<string, unknown>;
+      next();
+    });
+  } else {
+    res.send(new HttpError('Authorization token missing', 401));
+  }
+};
 
 export default authMiddleware;

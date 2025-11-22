@@ -1,6 +1,6 @@
-import express, { Request, Response } from "express";
-import dotenv from "dotenv";
-import cors from "cors";
+import express from 'express';
+import dotenv from 'dotenv';
+import cors from 'cors';
 import upload from 'express-fileupload';
 import usersV1 from './routes/v1/usersRoutes';
 
@@ -11,15 +11,14 @@ const app = express();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(upload(
-    {
-        useTempFiles: true,
-        tempFileDir: '/tmp/' // or any temp dir
-    }
-));
+app.use(
+  upload({
+    useTempFiles: true,
+    tempFileDir: '/tmp/', // or any temp dir
+  })
+);
 app.use(cors());
 
 app.use('/api/v1/users', usersV1);
-
 
 export default app;

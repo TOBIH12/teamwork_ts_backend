@@ -1,6 +1,5 @@
 // QUERIES FOR USER CONTROLLER
 
-
 // CREATE USER QUERIES
 
 export const checkEmailQuery = `SELECT * FROM "userModel" WHERE email = $1`;

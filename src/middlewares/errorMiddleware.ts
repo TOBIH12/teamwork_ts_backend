@@ -1,27 +1,27 @@
-import { Request, Response, NextFunction } from 'express';
-
+import { Request, Response } from 'express';
 
 // Unsupported (404) routes
 
-const notFound = (req: Request, res: Response, next: NextFunction) => {
-    const error = new Error(`Not Found + ${req.originalUrl}`);
-    res.status(404);
-    next(error);
-}
-
+const notFound = (req: Request, res: Response) => {
+  const error = new Error(`Not Found + ${req.originalUrl}`);
+  res.status(404);
+  return error;
+};
 
 // General error handler
-const errorHandler = (err: any, req: Request, res: Response, next: NextFunction) => {
+const errorHandler = (
+  err: Record<string, unknown>,
+  req: Request,
+  res: Response
+) => {
+  if (res.headersSent) {
+    res.json(err);
+  }
 
-    if(res.headersSent) {
-        return next(err);
-    }
-
-    res.status(err.statusCode || 500);
-    res.json({
-        message: err.message || 'Unknown error occurred',
-    });
-}
-
+  res.status((err.statusCode as number) || 500);
+  res.json({
+    message: err.message || 'Unknown error occurred',
+  });
+};
 
 export { notFound, errorHandler };

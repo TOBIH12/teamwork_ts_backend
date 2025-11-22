@@ -1,133 +1,152 @@
-import HttpError from '../../errorModel';
-import { Request, Response, NextFunction } from 'express';
-import pool from '../../db';
+import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
+import pool from '../../db';
+import HttpError from '../../errorModel';
 import { checkEmailQuery, insertUserQuery } from '../../queries/users.queries';
+import { registerSchema, signInSchema } from '../../zodSchema';
 
 dotenv.config();
 
+// Create User
 
+export const createUser = async (req: Request, res: Response) => {
+  const newUserDetails = registerSchema.safeParse(req.body);
 
-// Admin/ Create User
-// POST /api/v1/users/admin/createUser
-// PROTECTED ROUTE - ADMIN ONLY
-
-export const createUser = async (req: Request, res: Response, next: NextFunction) => {
-
+  if (newUserDetails.success) {
     try {
-         let { firstname, lastname, email, password, gender, jobrole, department, address} = req.body;
+      const newEmail = newUserDetails.data.email.toLowerCase();
 
-         if(!firstname || !lastname || !email || !password || !gender || !jobrole || !department || !address) {
-            return next(new HttpError('All fields are required', 422));
-         }
+      const emailExists = await pool.query(checkEmailQuery, [newEmail]);
 
-         const newEmail = email.toLowerCase();
+      if (emailExists.rows && emailExists.rows.length > 0) {
+        return res.status(400).json({
+          status: 'error',
+          error: 'Email already exists',
+        });
+      }
 
-         const emailExists = await pool.query(checkEmailQuery, [newEmail]);
-         console.log('Email exists check:', emailExists.rows);
+      const newUserPassword = newUserDetails.data.password;
 
-         if(emailExists.rows && emailExists.rows.length > 0) {
-            return next(new HttpError('Email already exists', 409));
-         }
+      if (newUserPassword.trim().length < 6) {
+        return res.status(400).json({
+          status: 'error',
+          error: new HttpError(
+            'Password must be at least 6 characters long',
+            400
+          ),
+        });
+      }
 
-         if(password.trim().length < 6) {
-            return next(new HttpError('Password must be at least 6 characters long', 422));
-         }
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(newUserPassword, salt);
 
-         const salt = await bcrypt.genSalt(10);
-         const hashedPassword = await bcrypt.hash(password, salt);
+      const insertUserValues = [
+        newUserDetails.data.firstname,
+        newUserDetails.data.lastname,
+        newEmail,
+        hashedPassword,
+        newUserDetails.data.gender,
+        newUserDetails.data.jobrole,
+        newUserDetails.data.department,
+        newUserDetails.data.address,
+      ];
 
-         
+      const newUserResult = await pool.query(insertUserQuery, insertUserValues);
+      if (!newUserResult.rows || newUserResult.rows.length === 0) {
+        return res.status(400).json({
+          status: 'error',
+          error: new HttpError('Failed to create user', 400),
+        });
+      }
 
-         const insertUserValues = [firstname, lastname, newEmail, hashedPassword, gender, jobrole, department, address];
+      const newUser = newUserResult.rows[0];
 
-         const newUserResult = await pool.query(insertUserQuery, insertUserValues);
-         if(!newUserResult.rows || newUserResult.rows.length === 0) {
-            return next(new HttpError('Failed to create user', 500));
-         }
-
-            const newUser = newUserResult.rows[0];
-
-            res.status(201).json({
-
-                status: 'success',
-                data: {
-                    message: `User ${newUser.firstname} ${newUser.lastname} created successfully`,
-                    id: newUser.userID,
-                    jobrole: newUser.jobrole
-                }
-
-                
-            });
-        
-    } catch (error: any) {
-
-        return next(new HttpError(error.message || 'Server Error', 500));
-        
+      return res.status(200).json({
+        status: 'success',
+        data: {
+          message: `User ${newUser.firstname} ${newUser.lastname} created successfully`,
+          id: newUser.userID,
+          jobrole: newUser.jobrole,
+        },
+      });
+    } catch (error: unknown) {
+      return res.status(400).json({
+        status: 'error',
+        error: new HttpError((error as string) || 'Server Error', 500),
+      });
     }
+  } else {
+    return res.status(400).json({
+      status: 'error',
+      error: new HttpError('Invalid input', 400),
+    });
+  }
 };
 
-
 // SIGN IN USER
-// POST /api/v1/users/signin
-// UNPROTECTED ROUTE
 
-export const signInUser = async (req: Request, res: Response, next: NextFunction) => {
+export const signInUser = async (req: Request, res: Response) => {
+  const userPass = signInSchema.safeParse(req.body);
 
-   try {
-      
-         const {email, password} = req.body;
+  if (userPass.success) {
+    try {
+      const userEmail = userPass.data.email.toLowerCase();
 
-         if(!email || !password){
-      return next(new HttpError('Email and Password are required', 422));
-    }
+      const userResponse = await pool.query(checkEmailQuery, [userEmail]);
 
-    const userEmail = email.toLowerCase();
-
-    const findUser = await pool.query(checkEmailQuery, [userEmail]);
-
-      if(!findUser.rows || findUser.rows.length === 0) {
-         return next(new HttpError('Invalid credentials', 401));
+      if (!userResponse.rows || userResponse.rows.length === 0) {
+        return res.status(400).json({
+          status: 'error',
+          error: 'Invalid email or password',
+        });
       }
 
-      const user = findUser.rows[0];
+      const user = userResponse.rows[0];
+      const userPassword = userPass.data.password;
 
-      const checkPassword = await bcrypt.compare(password, user.password);
+      const checkPassword = await bcrypt.compare(userPassword, user.password);
 
-      if(!checkPassword) {
-         return next(new HttpError('Invalid credentials', 401));
+      if (!checkPassword) {
+        return res.status(400).json({
+          status: 'error',
+          error: 'Invalid email or password',
+        });
       }
 
-      const {userID, firstName, lastName, jobrole} = user;
+      const { userID, firstName, lastName, jobrole } = user;
 
-      const token =  jwt.sign(
-         {
-            userID,
-            firstName,
-            lastName,
-            email: userEmail,
-            jobrole
-         },
-         process.env.JWT_SECRET as string,
-         {expiresIn: '1d'}
+      const token = jwt.sign(
+        {
+          userID,
+          firstName,
+          lastName,
+          email: userEmail,
+          jobrole,
+        },
+        process.env.JWT_SECRET as string,
+        { expiresIn: '1d' }
       );
 
-      res.status(200).json({
-         status: 'success',
-         data: {
-            token: token,
-            id: userID,
-            lastname: lastName,
-            jobrole: jobrole
-      
-         }
-   });
-
-   } catch (error: any) {
-       next(new HttpError(error.message || 'Server Error', 500));
-       console.error(error);
-      
-   }
+      return res.status(200).json({
+        status: 'success',
+        data: {
+          token,
+          id: userID,
+          lastname: lastName,
+          jobrole,
+        },
+      });
+    } catch (error: unknown) {
+      return res
+        .status(400)
+        .json(new HttpError((error as string) || 'Server Error', 500));
+    }
+  } else {
+    return res.status(400).json({
+      status: 'error',
+      error: new HttpError('Invalid input', 400),
+    });
+  }
 };
