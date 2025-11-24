@@ -10,7 +10,7 @@ describe('User Registration Endpoint', () => {
     const res = await request(app).post('/api/v1/users/admin/createUser').send({
       firstname: 'Jim',
       lastname: 'Sam',
-      email: 'dave@gmail.com',
+      email: 'davey@gmail.com',
       password: 'password123',
       gender: 'male',
       jobrole: 'employee',
@@ -33,7 +33,7 @@ describe('User Registration Endpoint', () => {
   it('should fail to register a user with existing email', async () => {
     const res = await request(app).post('/api/v1/users/admin/createUser').send({
       firstname: 'Jim',
-      lastname: 'Sam',
+      lastname: 'Samuel',
       email: 'joe@gmail.com',
       password: 'password123',
       gender: 'male',
@@ -76,7 +76,7 @@ describe('Sign In User Endpoint', () => {
 
   it('should fail to sign in with incorrect password', async () => {
     const res = await request(app).post('/api/v1/users/signin').send({
-      email: 'jane@gmail.com',
+      email: 'john@gmail.com',
       password: 'wrongpassword',
     });
     expect(res.status).to.equal(400);

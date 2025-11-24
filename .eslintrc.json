@@ -21,6 +21,7 @@
     }
   },
   "rules": {
+    "no-nested-ternary": "off",
     "import/no-cycle": "off",
     "no-console": "off",
     "import/extensions": "off",

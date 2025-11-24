@@ -1,7 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
 import dotenv from 'dotenv';
-import HttpError from '../errorModel';
 
 dotenv.config();
 
@@ -14,7 +13,7 @@ const authMiddleware = (
   res: Response,
   next: NextFunction
 ) => {
-  const authHeader = req.headers.authorization;
+  const authHeader = req.headers.authorization || req.headers.Authorization;
 
   if (
     authHeader &&
@@ -27,18 +26,28 @@ const authMiddleware = (
 
     jwt.verify(token, process.env.JWT_SECRET as string, (error, info) => {
       if (error?.name === 'TokenExpiredError') {
-        res.send(new HttpError('Session expired. Please sign in again', 401));
+        return res.status(401).json({
+          status: 'error',
+          error: error.message,
+        });
       }
       if (error) {
-        res.send(new HttpError('Unathorized. Invalid token', 401));
+        return res.status(401).json({
+          status: 'error',
+          error: error.message,
+        });
       }
 
       req.user = info as Record<string, unknown>;
-      next();
+      return next();
     });
   } else {
-    res.send(new HttpError('Authorization token missing', 401));
+    return res.status(401).json({
+      status: 'error',
+      error: 'Authorization token is missing',
+    });
   }
+  return next();
 };
 
 export default authMiddleware;
