@@ -12,13 +12,10 @@ const adminAuthentication = (
   if (!req?.user) {
     return res.status(401).json({
       status: 'error',
-      error: 'Unauthorized access',
+      error: 'Unauthorized access: No user information found',
     });
   }
-  console.log(
-    'User role in adminAuthentication middleware:',
-    req.user?.jobrole
-  );
+
   const role = req.user?.jobrole as string;
   if (role.trim().toLowerCase() !== 'admin') {
     return res.status(403).json({

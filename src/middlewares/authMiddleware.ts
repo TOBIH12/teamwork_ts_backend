@@ -1,6 +1,8 @@
 import jwt from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
 import dotenv from 'dotenv';
+import pool from '../db';
+import { fetchUserByIdQuery } from '../queries/users.queries';
 
 dotenv.config();
 
@@ -24,11 +26,11 @@ const authMiddleware = (
 
     const token = authHeader.split(' ')[1];
 
-    jwt.verify(token, process.env.JWT_SECRET as string, (error, info) => {
+    jwt.verify(token, process.env.JWT_SECRET as string, async (error, info) => {
       if (error?.name === 'TokenExpiredError') {
         return res.status(401).json({
           status: 'error',
-          error: error.message,
+          error: 'authorization access has expired',
         });
       }
       if (error) {
@@ -38,7 +40,18 @@ const authMiddleware = (
         });
       }
 
-      req.user = info as Record<string, unknown>;
+      const dbUserId = (info as { userID: number }).userID;
+
+      const userResult = await pool.query(fetchUserByIdQuery, [dbUserId]);
+      if (userResult.rows.length === 0 || !userResult.rows) {
+        return res.status(401).json({
+          status: 'error',
+          error: 'User not found',
+        });
+      }
+      const userInfo = userResult.rows[0];
+      req.user = userInfo;
+
       return next();
     });
   } else {
@@ -47,7 +60,6 @@ const authMiddleware = (
       error: 'Authorization token is missing',
     });
   }
-  return next();
 };
 
 export default authMiddleware;
