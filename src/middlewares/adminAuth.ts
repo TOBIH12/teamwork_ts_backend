@@ -20,7 +20,7 @@ const adminAuthentication = (
   if (role.trim().toLowerCase() !== 'admin') {
     return res.status(403).json({
       status: 'error',
-      error: 'Rejected: Admins only',
+      error: 'Forbidden.',
     });
   }
   return next();
