@@ -1,2 +1,3 @@
-/* Replace with your SQL commands */
+-- Table: public.users
 
+ DROP TABLE IF EXISTS public.users;
