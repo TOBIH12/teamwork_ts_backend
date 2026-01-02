@@ -1,5 +1,9 @@
 // QUERIES FOR USER CONTROLLER
 
-export const checkEmailQuery = `SELECT * FROM "userModel" WHERE email = $1`;
+// CREATE USER QUERIES
 
-export const insertUserQuery = `INSERT INTO "userModel" (firstName, lastName, email, password, gender, jobrole, department, address) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`;
+export const checkEmailQuery = `SELECT * FROM "users" WHERE email = $1`;
+
+export const insertUserQuery = `INSERT INTO "users" (firstName, lastName, email, password, gender, jobrole, department, address) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`;
+
+export const fetchUserByIdQuery = `SELECT * FROM "users" WHERE "userID" = $1`;

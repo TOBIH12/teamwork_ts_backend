@@ -5,6 +5,7 @@
   },
   "extends": [
     "airbnb-base",
+    "eslint:recommended",
     "plugin:@typescript-eslint/recommended",
     "plugin:prettier/recommended"
   ],
@@ -13,15 +14,29 @@
     "sourceType": "module",
     "project": "./tsconfig.json"
   },
-  "plugins": ["@typescript-eslint"],
+  "plugins": ["@typescript-eslint", "prettier"],
   "settings": {
     "import/resolver": {
       "typescript": {}
     }
   },
   "rules": {
+    "no-nested-ternary": "off",
     "import/no-cycle": "off",
     "no-console": "off",
-    "import/extensions": "off"
+    "import/extensions": "off",
+    "prettier/prettier": "error",
+    "import/no-extraneous-dependencies": [
+    "error",
+    {
+      "devDependencies": [
+        "**/test/**",
+        "**/*.test.js",
+        "**/*.test.ts",
+        "**/*.spec.js",
+        "**/*.spec.ts"
+      ]
+    }
+  ]
   }
 }
