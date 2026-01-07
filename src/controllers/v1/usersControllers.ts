@@ -72,8 +72,9 @@ export default class UserControllers {
         status: 'success',
         data: {
           message: `User ${newUser.firstname} ${newUser.lastname} created successfully`,
-          id: newUser.userID,
+          id: newUser.user_id,
           jobrole: newUser.jobrole,
+          created_on: newUser.created_on,
         },
       });
     } catch (error: unknown) {
@@ -112,11 +113,11 @@ export default class UserControllers {
         });
       }
 
-      const { userID, firstName, lastName, jobrole } = user;
+      const { user_id, firstName, lastName, jobrole } = user;
 
       const token = jwt.sign(
         {
-          userID,
+          user_id,
           firstName,
           lastName,
           email: userEmail,
@@ -130,7 +131,7 @@ export default class UserControllers {
         status: 'success',
         data: {
           token,
-          id: userID,
+          id: user_id,
           firstName,
           lastname: lastName,
           jobrole,

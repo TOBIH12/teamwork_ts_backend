@@ -40,7 +40,7 @@ const authMiddleware = (
         });
       }
 
-      const dbUserId = (info as { userID: number }).userID;
+      const dbUserId = (info as { user_id: number }).user_id;
 
       const userResult = await pool.query(fetchUserByIdQuery, [dbUserId]);
       if (userResult.rows.length === 0 || !userResult.rows) {

@@ -8,13 +8,13 @@ const { expect } = chai;
 describe('User Registration Endpoint', () => {
   it('should register a new user successfully', async () => {
     const res = await request(app).post('/api/v1/users/admin/createUser').send({
-      firstname: 'Jim',
-      lastname: 'Sam',
-      email: 'davey@gmail.com',
+      firstname: 'Jimmy',
+      lastname: 'Samuel',
+      email: 'dave@gmail.com',
       password: 'password123',
       gender: 'male',
       jobrole: 'employee',
-      department: 'engineering',
+      department: 'accounting',
       address: '123 Main St',
     });
     expect(res.status).to.equal(200);
@@ -22,7 +22,7 @@ describe('User Registration Endpoint', () => {
     expect(res.body).to.have.property('status', 'success');
     expect(res.body.data).to.have.property(
       'message',
-      'User Jim Sam created successfully'
+      'User Jimmy Samuel created successfully'
     );
     expect(res.body.data).to.have.property('id');
     expect(res.body.data).to.have.property('jobrole', 'employee');
@@ -34,7 +34,7 @@ describe('User Registration Endpoint', () => {
     const res = await request(app).post('/api/v1/users/admin/createUser').send({
       firstname: 'Jim',
       lastname: 'Samuel',
-      email: 'joe@gmail.com',
+      email: 'bolaji@gmail.com',
       password: 'password123',
       gender: 'male',
       jobrole: 'employee',
@@ -51,7 +51,7 @@ describe('User Registration Endpoint', () => {
 describe('Sign In User Endpoint', () => {
   it('should sign in a user successfully', async () => {
     const res = await request(app).post('/api/v1/users/signin').send({
-      email: 'john@gmail.com',
+      email: 'davey@gmail.com',
       password: 'password123',
     });
     expect(res.status).to.equal(200);
@@ -76,7 +76,7 @@ describe('Sign In User Endpoint', () => {
 
   it('should fail to sign in with incorrect password', async () => {
     const res = await request(app).post('/api/v1/users/signin').send({
-      email: 'john@gmail.com',
+      email: 'davey@gmail.com',
       password: 'wrongpassword',
     });
     expect(res.status).to.equal(400);
