@@ -6,7 +6,6 @@ import pool from '../../db';
 import { postGifSchema } from '../../zodSchema';
 import cloudinaryConfig from '../../cloudinaryConfig';
 import {
-  incrementUserGifsCountQuery,
   insertGifPostQuery,
 } from '../../queries/posts.queries';
 
@@ -20,8 +19,6 @@ interface PostRequest extends Request<PostGifInput> {
     firstname: string;
     lastname: string;
     email: string;
-    gifs: number;
-    articles: number;
     user_img: string;
     gender: string;
     jobrole: string;
@@ -69,16 +66,6 @@ export default class PostsControllers {
       const { gif_id, created_on } = newGifPost.rows[0];
 
       // Increment user's GIF count
-      const newGifsCount = (req.user?.gifs || 0) + 1;
-
-      await pool
-        .query(incrementUserGifsCountQuery, [newGifsCount, creator_id])
-        .catch((err) => {
-          return res.status(500).json({
-            status: 'error',
-            error: err.message || 'Failed to update user GIFs count',
-          });
-        });
 
       return res.status(201).json({
         status: 'success',
