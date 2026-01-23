@@ -2,18 +2,18 @@ import express from 'express';
 import authMiddleware from '../../middlewares/authMiddleware';
 import PostsControllers from '../../controllers/v1/postsControllers';
 import validationMiddleware from '../../middlewares/validator';
-import { postGifSchemaDTO } from '../../zodSchema';
-import uploadedGif from '../../middlewares/multerMiddleware';
+import { PostGifSchemaDTO } from '../../zodSchema';
+import UploadedGif from '../../middlewares/multerMiddleware';
 
-const router = express();
+const Router = express();
 const postsControllers = new PostsControllers();
 
-router.post(
+Router.post(
   '/post_gif',
   authMiddleware,
-  uploadedGif,
-  validationMiddleware(postGifSchemaDTO),
-  postsControllers.createGifPost
+  UploadedGif,
+  validationMiddleware(PostGifSchemaDTO),
+  postsControllers.CreateGifPost
 );
 
-export default router;
+export default Router;

@@ -4,13 +4,13 @@ import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 import z from 'zod';
 import pool from '../../db';
-import { checkEmailQuery, insertUserQuery } from '../../queries/users.queries';
-import { registerSchema, signInSchema } from '../../zodSchema';
+import { CheckEmailQuery, InsertUserQuery } from '../../queries/users.queries';
+import { RegisterSchema, SignInSchema } from '../../zodSchema';
 
 dotenv.config();
 
-type RegisterInput = z.infer<typeof registerSchema>;
-type SignInput = z.infer<typeof signInSchema>;
+type RegisterInput = z.infer<typeof RegisterSchema>;
+type SignInput = z.infer<typeof SignInSchema>;
 
 export default class UserControllers {
   // Create User
@@ -31,50 +31,50 @@ export default class UserControllers {
     } = req.body;
 
     try {
-      const newEmail = email.toLowerCase();
+      const NewEmail = email.toLowerCase();
 
-      const emailExists = await pool.query(checkEmailQuery, [newEmail]);
+      const EmailExists = await pool.query(CheckEmailQuery, [NewEmail]);
 
-      if (emailExists.rows && emailExists.rows.length > 0) {
+      if (EmailExists.rows && EmailExists.rows.length > 0) {
         return res.status(400).json({
           status: 'error',
           error: 'Email already exists',
         });
       }
 
-      const newUserPassword = password;
+      const NewUserPassword = password;
 
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(newUserPassword, salt);
+      const Salt = await bcrypt.genSalt(10);
+      const HashedPassword = await bcrypt.hash(NewUserPassword, Salt);
 
-      const insertUserValues = [
+      const InsertUserValues = [
         firstname,
         lastname,
-        newEmail,
-        hashedPassword,
+        NewEmail,
+        HashedPassword,
         gender,
         jobrole,
         department,
         address,
       ];
 
-      const newUserResult = await pool.query(insertUserQuery, insertUserValues);
-      if (!newUserResult.rows || newUserResult.rows.length === 0) {
+      const NewUserResult = await pool.query(InsertUserQuery, InsertUserValues);
+      if (!NewUserResult.rows || NewUserResult.rows.length === 0) {
         return res.status(400).json({
           status: 'error',
           error: 'Failed to create user',
         });
       }
 
-      const newUser = newUserResult.rows[0];
+      const NewUser = NewUserResult.rows[0];
 
       return res.status(200).json({
         status: 'success',
         data: {
-          message: `User ${newUser.firstname} ${newUser.lastname} created successfully`,
-          id: newUser.user_id,
-          jobrole: newUser.jobrole,
-          created_on: newUser.created_on,
+          message: `User ${NewUser.firstname} ${NewUser.lastname} created successfully`,
+          id: NewUser.user_id,
+          jobrole: NewUser.jobrole,
+          created_on: NewUser.created_on,
         },
       });
     } catch (error: unknown) {
@@ -90,37 +90,37 @@ export default class UserControllers {
   async signInUser(req: Request<SignInput>, res: Response): Promise<Response> {
     const { email, password } = req.body;
     try {
-      const userEmail = email.toLowerCase();
+      const UserEmail = email.toLowerCase();
 
-      const userResponse = await pool.query(checkEmailQuery, [userEmail]);
+      const UserResponse = await pool.query(CheckEmailQuery, [UserEmail]);
 
-      if (!userResponse.rows || userResponse.rows.length === 0) {
+      if (!UserResponse.rows || UserResponse.rows.length === 0) {
         return res.status(400).json({
           status: 'error',
           error: 'Invalid email or password',
         });
       }
 
-      const user = userResponse.rows[0];
-      const userPassword = password;
+      const User = UserResponse.rows[0];
+      const UserPassword = password;
 
-      const checkPassword = await bcrypt.compare(userPassword, user.password);
+      const CheckPassword = await bcrypt.compare(UserPassword, User.password);
 
-      if (!checkPassword) {
+      if (!CheckPassword) {
         return res.status(400).json({
           status: 'error',
           error: 'Invalid email or password',
         });
       }
 
-      const { user_id, firstName, lastName, jobrole } = user;
+      const { user_id, firstName, lastName, jobrole } = User;
 
-      const token = jwt.sign(
+      const Token = jwt.sign(
         {
           user_id,
           firstName,
           lastName,
-          email: userEmail,
+          email: UserEmail,
           jobrole: jobrole.trim().toLowerCase(),
         },
         process.env.JWT_SECRET as string,
@@ -130,7 +130,7 @@ export default class UserControllers {
       return res.status(200).json({
         status: 'success',
         data: {
-          token,
+          Token,
           id: user_id,
           firstName,
           lastname: lastName,

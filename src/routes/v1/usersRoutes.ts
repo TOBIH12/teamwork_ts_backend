@@ -2,24 +2,24 @@ import express from 'express';
 import authMiddleware from '../../middlewares/authMiddleware';
 import UserControllers from '../../controllers/v1/usersControllers';
 import validationMiddleware from '../../middlewares/validator';
-import { registrationSchemaDTO, signInSchemaDTO } from '../../zodSchema';
+import { RegistrationSchemaDTO, SignInSchemaDTO } from '../../zodSchema';
 import adminAuthentication from '../../middlewares/adminAuth';
 
-const router = express();
+const Router = express();
 
 const userControllers = new UserControllers();
 
-router.post(
+Router.post(
   '/admin/createUser',
-  validationMiddleware(registrationSchemaDTO),
+  validationMiddleware(RegistrationSchemaDTO),
   authMiddleware,
   adminAuthentication,
   userControllers.createUser
 );
-router.post(
+Router.post(
   '/signin',
-  validationMiddleware(signInSchemaDTO),
+  validationMiddleware(SignInSchemaDTO),
   userControllers.signInUser
 );
 
-export default router;
+export default Router;

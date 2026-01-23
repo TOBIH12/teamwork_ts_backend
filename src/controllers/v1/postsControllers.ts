@@ -1,36 +1,20 @@
 import { Request, Response } from 'express';
 import dotenv from 'dotenv';
 import z from 'zod';
-import multer from 'multer';
 import pool from '../../db';
-import { postGifSchema } from '../../zodSchema';
-import cloudinaryConfig from '../../cloudinaryConfig';
+import { PostGifSchema } from '../../zodSchema';
+import CloudinaryConfig from '../../cloudinaryConfig';
 import {
-  insertGifPostQuery,
+  InsertGifPostQuery,
 } from '../../queries/posts.queries';
 
 dotenv.config();
 
-type PostGifInput = z.infer<typeof postGifSchema>;
-
-interface PostRequest extends Request<PostGifInput> {
-  user?: {
-    user_id: number;
-    firstname: string;
-    lastname: string;
-    email: string;
-    user_img: string;
-    gender: string;
-    jobrole: string;
-    department: string;
-    address: string;
-  };
-  file?: Express.Multer.File;
-}
+type PostGifInput = z.infer<typeof PostGifSchema>;
 
 export default class PostsControllers {
   // Create GIF Post
-  async createGifPost(req: PostRequest, res: Response) {
+  async CreateGifPost(req: Request<PostGifInput>, res: Response) {
     try {
       const { title } = req.body;
 
@@ -40,30 +24,30 @@ export default class PostsControllers {
           .json({ status: 'error', error: 'No GIF file uploaded' });
       }
 
-      const gif = req.file;
+      const Gif = req.file;
 
-      const gif_url = await cloudinaryConfig.uploader.upload(gif.path, {
+      const GifUrl = await CloudinaryConfig.uploader.upload(Gif.path, {
         resource_type: 'auto',
         folder: 'gifs',
         public_id: `${Date.now()}`,
       });
 
-      if (!gif_url || !gif_url.secure_url) {
+      if (!GifUrl || !GifUrl.secure_url) {
         return res.status(500).json({
           status: 'error',
           error: 'Failed to upload GIF to Cloudinary',
         });
       }
 
-      const creator_id = req.user?.user_id;
+      const CreatorId = req.user?.user_id;
 
-      const newGifPost = await pool.query(insertGifPostQuery, [
+      const NewGifPost = await pool.query(InsertGifPostQuery, [
         title,
-        gif_url.secure_url,
-        creator_id,
+        GifUrl.secure_url,
+        CreatorId,
       ]);
 
-      const { gif_id, created_on } = newGifPost.rows[0];
+      const { gif_id, created_on } = NewGifPost.rows[0];
 
       // Increment user's GIF count
 
@@ -73,9 +57,9 @@ export default class PostsControllers {
           gif_id,
           message: 'GIF post created successfully',
           createdOn: created_on,
-          title: newGifPost.rows[0].title,
-          gifUrl: newGifPost.rows[0].gif_url,
-          authorId: newGifPost.rows[0].creator_id,
+          title: NewGifPost.rows[0].title,
+          gifUrl: NewGifPost.rows[0].gif_url,
+          authorId: NewGifPost.rows[0].creator_id,
         },
       });
     } catch (err) {

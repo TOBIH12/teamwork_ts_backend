@@ -1,3 +1,4 @@
+import './types';
 import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
@@ -7,16 +8,16 @@ import { errorHandler, notFound } from './middlewares/errorMiddleware';
 
 dotenv.config();
 
-const app = express();
+const App = express();
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(cors());
+App.use(express.json());
+App.use(express.urlencoded({ extended: true }));
+App.use(cors());
 
-app.use('/api/v1/users', usersV1);
-app.use('/api/v1/posts', postsV1);
+App.use('/api/v1/users', usersV1);
+App.use('/api/v1/posts', postsV1);
 
-app.use(notFound);
-app.use(errorHandler);
+App.use(notFound);
+App.use(errorHandler);
 
-export default app;
+export default App;

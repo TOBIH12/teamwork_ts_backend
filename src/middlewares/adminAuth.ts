@@ -1,11 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 
-interface AuthRequest extends Request {
-  user?: Record<string, unknown>;
-}
-
 const adminAuthentication = (
-  req: AuthRequest,
+  req: Request,
   res: Response,
   next: NextFunction
 ) => {

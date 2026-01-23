@@ -9,5 +9,5 @@ cloudinary.v2.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-const cloudinaryConfig = cloudinary.v2;
-export default cloudinaryConfig;
+const CloudinaryConfig = cloudinary.v2;
+export default CloudinaryConfig;
