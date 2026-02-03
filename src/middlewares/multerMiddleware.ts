@@ -1,6 +1,6 @@
 import multer from 'multer';
 
-const Upload = multer({
+const upload = multer({
   storage: multer.diskStorage({}),
   limits: {
     fileSize: 5 * 1024 * 1024,
@@ -14,6 +14,6 @@ const Upload = multer({
   },
 });
 
-const UploadedGif = Upload.single('gif');
+const uploadedGif = upload.single('gif');
 
-export default UploadedGif;
+export default uploadedGif;

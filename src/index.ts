@@ -8,16 +8,16 @@ import { errorHandler, notFound } from './middlewares/errorMiddleware';
 
 dotenv.config();
 
-const App = express();
+const app = express();
 
-App.use(express.json());
-App.use(express.urlencoded({ extended: true }));
-App.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cors());
 
-App.use('/api/v1/users', usersV1);
-App.use('/api/v1/posts', postsV1);
+app.use('/api/v1/users', usersV1);
+app.use('/api/v1/posts', postsV1);
 
-App.use(notFound);
-App.use(errorHandler);
+app.use(notFound);
+app.use(errorHandler);
 
-export default App;
+export default app;

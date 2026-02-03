@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-import App from './index';
+import app from './index';
 import pool from './db';
 
 dotenv.config();
@@ -10,4 +10,4 @@ pool
   .catch((err) => console.error('Database connection error', err));
 
 const PORT = process.env.PORT || 5000;
-App.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

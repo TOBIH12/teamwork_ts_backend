@@ -23,9 +23,6 @@ CREATE TABLE IF NOT EXISTS public.users
 
 TABLESPACE pg_default;
 
-ALTER TABLE IF EXISTS public.users
-    OWNER to postgres;
-
 
 
 --------- GIFS TABLE ---------
@@ -40,7 +37,6 @@ ALTER TABLE IF EXISTS public.users
 )
 
 TABLESPACE pg_default;
-    OWNER to postgres;
 
 --------- GIF_LIKES TABLE ---------
 
