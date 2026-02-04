@@ -1,11 +1,11 @@
 type UserInfo = {
   user_id: number;
-  firstname: string;
-  lastname: string;
+  first_name: string;
+  last_name: string;
   email: string;
-  user_img: string;
+  userImg: string;
   gender: string;
-  jobrole: string;
+  job_role: string;
   department: string;
   address: string;
 };

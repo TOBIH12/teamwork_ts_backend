@@ -33,7 +33,7 @@ const authMiddleware: RequestHandler = (req, res, next) => {
       }
 
       try {
-        const dbUserId = (info as { user_id: number }).user_id;
+        const dbUserId = (info as { userId: number }).userId;
 
         const userResult = await pool.query(fetchUserByIdQuery, [dbUserId]);
         if (userResult.rows.length === 0 || !userResult.rows) {

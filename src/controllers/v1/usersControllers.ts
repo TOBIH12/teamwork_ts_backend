@@ -20,12 +20,12 @@ export default class UserControllers {
     res: Response
   ): Promise<Response> {
     const {
-      firstname,
-      lastname,
+      firstName,
+      lastName,
       email,
       password,
       gender,
-      jobrole,
+      jobRole,
       department,
       address,
     } = req.body;
@@ -48,12 +48,12 @@ export default class UserControllers {
       const hashedPassword = await bcrypt.hash(newUserPassword, salt);
 
       const insertUserValues = [
-        firstname,
-        lastname,
+        firstName,
+        lastName,
         newEmail,
         hashedPassword,
         gender,
-        jobrole,
+        jobRole,
         department,
         address,
       ];
@@ -67,14 +67,14 @@ export default class UserControllers {
       }
 
       const user = newUserResult.rows[0];
-      const {user_id, created_on} = user;
+      const { user_id, first_name, last_name, job_role, created_on } = user;
 
       return res.status(200).json({
         status: 'success',
         data: {
-          message: `User ${user.firstname} ${user.lastname} created successfully`,
-          id: user_id,
-          jobRole: user.jobrole,
+          message: `User ${first_name} ${last_name} created successfully`,
+          userId: user_id,
+          jobRole: job_role,
           createdOn: created_on,
         },
       });
@@ -114,15 +114,15 @@ export default class UserControllers {
         });
       }
 
-      const { user_id, firstname, lastname, jobrole } = user;
+      const { user_id, first_name, last_name, job_role } = user;
 
       const token = jwt.sign(
         {
-          user_id,
-          firstname,
-          lastname,
+          userId: user_id,
+          firstName: first_name,
+          lastName: last_name,
           email: userEmail,
-          jobRole: jobrole.trim().toLowerCase(),
+          jobRole: job_role.trim().toLowerCase(),
         },
         process.env.JWT_SECRET as string,
         { expiresIn: '1d' }
@@ -132,10 +132,10 @@ export default class UserControllers {
         status: 'success',
         data: {
           token,
-          id: user_id,
-          firstName: firstname,
-          lastName: lastname,
-          jobRole: jobrole,
+          userId: user_id,
+          firstName: first_name,
+          lastName: last_name,
+          jobRole: job_role,
         },
       });
     } catch (error: unknown) {

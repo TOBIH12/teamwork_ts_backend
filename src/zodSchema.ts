@@ -4,12 +4,12 @@ import { z } from 'zod';
 
 // User registration schema validation
 export const registerSchema = z.object({
-  firstname: z.string().min(2, 'First name is required').max(40),
-  lastname: z.string().min(2, 'Last name is required').max(40),
+  firstName: z.string().min(2, 'First name is required').max(40),
+  lastName: z.string().min(2, 'Last name is required').max(40),
   email: z.email('Invalid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters long'),
   gender: z.enum(['male', 'female'], 'Gender must be either male or female'),
-  jobrole: z.enum(
+  jobRole: z.enum(
     ['admin', 'employee'],
     'Job role must be either admin or employee'
   ),
