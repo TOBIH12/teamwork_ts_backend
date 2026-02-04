@@ -20,12 +20,12 @@ export default class UserControllers {
     res: Response
   ): Promise<Response> {
     const {
-      firstname,
-      lastname,
+      firstName,
+      lastName,
       email,
       password,
       gender,
-      jobrole,
+      jobRole,
       department,
       address,
     } = req.body;
@@ -48,12 +48,12 @@ export default class UserControllers {
       const hashedPassword = await bcrypt.hash(newUserPassword, salt);
 
       const insertUserValues = [
-        firstname,
-        lastname,
+        firstName,
+        lastName,
         newEmail,
         hashedPassword,
         gender,
-        jobrole,
+        jobRole,
         department,
         address,
       ];
@@ -66,14 +66,16 @@ export default class UserControllers {
         });
       }
 
-      const newUser = newUserResult.rows[0];
+      const user = newUserResult.rows[0];
+      const { user_id, first_name, last_name, job_role, created_on } = user;
 
       return res.status(200).json({
         status: 'success',
         data: {
-          message: `User ${newUser.firstname} ${newUser.lastname} created successfully`,
-          id: newUser.userID,
-          jobrole: newUser.jobrole,
+          message: `User ${first_name} ${last_name} created successfully`,
+          userId: user_id,
+          jobRole: job_role,
+          createdOn: created_on,
         },
       });
     } catch (error: unknown) {
@@ -112,15 +114,15 @@ export default class UserControllers {
         });
       }
 
-      const { userID, firstName, lastName, jobrole } = user;
+      const { user_id, first_name, last_name, job_role } = user;
 
       const token = jwt.sign(
         {
-          userID,
-          firstName,
-          lastName,
+          userId: user_id,
+          firstName: first_name,
+          lastName: last_name,
           email: userEmail,
-          jobrole: jobrole.trim().toLowerCase(),
+          jobRole: job_role.trim().toLowerCase(),
         },
         process.env.JWT_SECRET as string,
         { expiresIn: '1d' }
@@ -130,10 +132,10 @@ export default class UserControllers {
         status: 'success',
         data: {
           token,
-          id: userID,
-          firstName,
-          lastname: lastName,
-          jobrole,
+          userId: user_id,
+          firstName: first_name,
+          lastName: last_name,
+          jobRole: job_role,
         },
       });
     } catch (error: unknown) {

@@ -1,20 +1,12 @@
+import { RequestHandler } from 'express';
 import jwt from 'jsonwebtoken';
-import { Request, Response, NextFunction } from 'express';
 import dotenv from 'dotenv';
 import pool from '../db';
 import { fetchUserByIdQuery } from '../queries/users.queries';
 
 dotenv.config();
 
-interface AuthRequest extends Request {
-  user?: Record<string, unknown>;
-}
-
-const authMiddleware = (
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction
-) => {
+const authMiddleware: RequestHandler = (req, res, next) => {
   const authHeader = req.headers.authorization || req.headers.Authorization;
 
   if (
@@ -40,19 +32,25 @@ const authMiddleware = (
         });
       }
 
-      const dbUserId = (info as { userID: number }).userID;
+      try {
+        const dbUserId = (info as { userId: number }).userId;
 
-      const userResult = await pool.query(fetchUserByIdQuery, [dbUserId]);
-      if (userResult.rows.length === 0 || !userResult.rows) {
-        return res.status(401).json({
+        const userResult = await pool.query(fetchUserByIdQuery, [dbUserId]);
+        if (userResult.rows.length === 0 || !userResult.rows) {
+          return res.status(401).json({
+            status: 'error',
+            error: 'User not found',
+          });
+        }
+        req.user = userResult.rows[0];
+
+        return next();
+      } catch (err) {
+        return res.status(500).json({
           status: 'error',
-          error: 'User not found',
+          error: err || 'Internal server error',
         });
       }
-      const userInfo = userResult.rows[0];
-      req.user = userInfo;
-
-      return next();
     });
   } else {
     return res.status(401).json({

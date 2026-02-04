@@ -1,11 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 
-interface AuthRequest extends Request {
-  user?: Record<string, unknown>;
-}
-
 const adminAuthentication = (
-  req: AuthRequest,
+  req: Request,
   res: Response,
   next: NextFunction
 ) => {
@@ -16,7 +12,14 @@ const adminAuthentication = (
     });
   }
 
-  const role = req.user?.jobrole as string;
+  const role = req.user?.job_role as string;
+  if (!role) {
+    return res.status(403).json({
+      status: 'error',
+      error: 'Forbidden: User role not found',
+    });
+  }
+
   if (role.trim().toLowerCase() !== 'admin') {
     return res.status(403).json({
       status: 'error',
