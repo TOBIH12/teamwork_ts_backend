@@ -60,7 +60,7 @@ export default class PostsControllers {
           authorId: newGifPost.rows[0].creator_id,
         },
       });
-    } catch (err) {
+    } catch (err: unknown) {
       return res
         .status(400)
         .json({ status: 'error', error: err || 'Failed to create GIF post' });

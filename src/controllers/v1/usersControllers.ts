@@ -4,7 +4,15 @@ import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 import z from 'zod';
 import pool from '../../db';
-import { checkEmailQuery, insertUserQuery } from '../../queries/users.queries';
+import cloudinaryConfig from '../../cloudinaryConfig';
+import {
+  checkEmailQuery,
+  fetchUserByIdQuery,
+  insertUserQuery,
+  updateUserQuery,
+  updatePasswordQuery,
+  updateUserImgquery,
+} from '../../queries/users.queries';
 import { registerSchema, signInSchema } from '../../zodSchema';
 
 dotenv.config();
@@ -19,18 +27,18 @@ export default class UserControllers {
     req: Request<RegisterInput>,
     res: Response
   ): Promise<Response> {
-    const {
-      firstName,
-      lastName,
-      email,
-      password,
-      gender,
-      jobRole,
-      department,
-      address,
-    } = req.body;
-
     try {
+      const {
+        firstName,
+        lastName,
+        email,
+        password,
+        gender,
+        jobRole,
+        department,
+        address,
+      } = req.body;
+
       const newEmail = email.toLowerCase();
 
       const emailExists = await pool.query(checkEmailQuery, [newEmail]);
@@ -89,8 +97,8 @@ export default class UserControllers {
   // SIGN IN USER
 
   async signInUser(req: Request<SignInput>, res: Response): Promise<Response> {
-    const { email, password } = req.body;
     try {
+      const { email, password } = req.body;
       const userEmail = email.toLowerCase();
 
       const userResponse = await pool.query(checkEmailQuery, [userEmail]);
@@ -122,7 +130,7 @@ export default class UserControllers {
           firstName: first_name,
           lastName: last_name,
           email: userEmail,
-          jobRole: job_role.trim().toLowerCase(),
+          jobRole: job_role,
         },
         process.env.JWT_SECRET as string,
         { expiresIn: '1d' }
@@ -139,7 +147,285 @@ export default class UserControllers {
         },
       });
     } catch (error: unknown) {
-      return res.status(400).json({
+      return res.status(500).json({
+        status: 'error',
+        error: (error as string) || 'Server Error',
+      });
+    }
+  }
+
+  // Edit User details
+
+  async editUserDetails(req: Request, res: Response): Promise<Response> {
+    try {
+      const { userId } = req.params;
+
+      if (!userId) {
+        return res.status(400).json({
+          status: 'params error',
+          error: 'User ID not found in request parameters',
+        });
+      }
+
+      const parsedUserId = parseInt(userId, 10);
+
+      const reqUserId = req.user?.user_id;
+
+      const user = await pool.query(fetchUserByIdQuery, [reqUserId]);
+
+      if (!user.rows[0] || user.rows.length === 0) {
+        return res.status(404).json({
+          status: 'error',
+          error: 'User not found',
+        });
+      }
+
+      if (reqUserId !== parsedUserId) {
+        return res.status(403).json({
+          status: 'error',
+          error: `Unauthorized to edit another user's details`,
+        });
+      }
+
+      const { firstName, lastName, email, gender, department, address } =
+        req.body;
+
+      if (email && email !== user.rows[0].email) {
+        const newEmail = email.toLowerCase();
+
+        const emailExists = await pool.query(checkEmailQuery, [newEmail]);
+
+        if (emailExists.rows && emailExists.rows.length > 0) {
+          return res.status(400).json({
+            status: 'error',
+            error: 'Email already exists',
+          });
+        }
+      }
+
+      const updateUserValues = [
+        firstName,
+        lastName,
+        email,
+        gender,
+        department,
+        address,
+      ];
+
+      const updatedUser = await pool.query(updateUserQuery, [
+        ...updateUserValues,
+        reqUserId,
+      ]);
+
+      if (!updatedUser.rows || updatedUser.rows.length === 0) {
+        return res.status(400).json({
+          status: 'error',
+          error: 'Failed to update user',
+        });
+      }
+
+      const updatedUserInfo = updatedUser.rows[0];
+
+      return res.status(200).json({
+        status: 'success',
+        data: {
+          message: 'User details updated successfully',
+          userId: updatedUserInfo.user_id,
+          firstName: updatedUserInfo.first_name,
+          lastName: updatedUserInfo.last_name,
+          email: updatedUserInfo.email,
+          gender: updatedUserInfo.gender,
+          department: updatedUserInfo.department,
+          address: updatedUserInfo.address,
+        },
+      });
+    } catch (error: unknown) {
+      return res.status(500).json({
+        status: 'error',
+        error: (error as string) || 'Server Error',
+      });
+    }
+  }
+
+  // Change Password
+
+  async changePassword(req: Request, res: Response): Promise<Response> {
+    try {
+      const { userId } = req.params;
+
+      if (!userId) {
+        return res.status(400).json({
+          status: 'params error',
+          error: 'User ID not found in request parameters',
+        });
+      }
+
+      const parsedUserId = parseInt(userId, 10);
+
+      const reqUserId = req.user?.user_id;
+
+      const user = await pool.query(fetchUserByIdQuery, [reqUserId]);
+
+      if (!user.rows[0] || user.rows.length === 0) {
+        return res.status(404).json({
+          status: 'error',
+          error: 'User not found',
+        });
+      }
+
+      if (reqUserId !== parsedUserId) {
+        return res.status(403).json({
+          status: 'error',
+          error: `Unauthorized to change another user's password`,
+        });
+      }
+
+      const { email, currentPassword, newPassword, confirmNewPassword } =
+        req.body;
+
+      const userEmail = email.toLowerCase();
+
+      const emailExists = await pool.query(checkEmailQuery, [userEmail]);
+
+      if (!emailExists || emailExists.rows.length === 0) {
+        return res.status(400).json({
+          status: 'error',
+          error: 'Email address is not recognized',
+        });
+      }
+
+      if (emailExists.rows[0].email !== user.rows[0].email) {
+        return res.status(400).json({
+          status: 'error',
+          error: `Wrong Email address for current user`,
+        });
+      }
+
+      const checkPassword = await bcrypt.compare(
+        currentPassword,
+        user.rows[0].password
+      );
+
+      if (!checkPassword) {
+        return res.status(400).json({
+          status: 'error',
+          error: 'Current password is incorrect',
+        });
+      }
+
+      if (newPassword !== confirmNewPassword) {
+        return res.status(400).json({
+          status: 'error',
+          error: 'New password and confirm new password do not match',
+        });
+      }
+
+      const salt = await bcrypt.genSalt(10);
+      const hashedNewPassword = await bcrypt.hash(newPassword, salt);
+
+      const updatedPassword = await pool.query(updatePasswordQuery, [
+        hashedNewPassword,
+        reqUserId,
+      ]);
+
+      if (!updatedPassword) {
+        return res.status(400).json({
+          status: 'error',
+          error: 'Failed to update password',
+        });
+      }
+
+      return res.status(200).json({
+        status: 'success',
+        data: {
+          message: 'Password updated successfully',
+        },
+      });
+    } catch (error: unknown) {
+      return res.status(500).json({
+        status: 'error',
+        error: (error as string) || 'Server Error',
+      });
+    }
+  }
+
+  // Edit User Image
+
+  async uploadUserImage(req: Request, res: Response): Promise<Response> {
+    try {
+      const { userId } = req.params;
+
+      if (!userId) {
+        return res.status(400).json({
+          status: 'params error',
+          error: 'User ID not found in request parameters',
+        });
+      }
+
+      const parsedUserId = parseInt(userId, 10);
+
+      const reqUserId = req.user?.user_id;
+
+      const user = await pool.query(fetchUserByIdQuery, [reqUserId]);
+
+      if (!user.rows[0] || user.rows.length === 0) {
+        return res.status(404).json({
+          status: 'error',
+          error: 'User not found',
+        });
+      }
+
+      if (reqUserId !== parsedUserId) {
+        return res.status(403).json({
+          status: 'error',
+          error: `Unauthorized to change another user's image`,
+        });
+      }
+
+      if (!req.file) {
+        return res.status(400).json({
+          status: 'error',
+          error: 'No image file uploaded',
+        });
+      }
+
+      const userImg = req.file;
+
+      const userImgUrl = await cloudinaryConfig.uploader.upload(userImg.path, {
+        resource_type: 'auto',
+        folder: 'avatars',
+        public_id: `${Date.now()}`,
+      });
+
+      if (!userImgUrl || !userImgUrl.secure_url) {
+        return res.status(500).json({
+          status: 'error',
+          error: 'Failed to upload user image to Cloudinary',
+        });
+      }
+
+      const updatedUserImg = await pool.query(updateUserImgquery, [
+        userImgUrl.secure_url,
+        reqUserId,
+      ]);
+
+      if (!updatedUserImg || updatedUserImg.rows.length === 0) {
+        return res.status(400).json({
+          status: 'error',
+          error: 'Failed to update user image',
+        });
+      }
+
+      return res.status(201).json({
+        status: 'success',
+        data: {
+          message: 'User image updated successfully',
+          userId: reqUserId,
+          userImgUrl: userImgUrl.secure_url,
+        },
+      });
+    } catch (error: unknown) {
+      return res.status(500).json({
         status: 'error',
         error: (error as string) || 'Server Error',
       });

@@ -11,7 +11,7 @@ const validationMiddleware = (schema: z.ZodSchema) => {
       });
       if (!dataToValidate.success) {
         return res.status(400).json({
-          status: 'error',
+          status: 'validation error',
           error: dataToValidate.error.issues
             .map((issue) => issue.message)
             .join(', '),

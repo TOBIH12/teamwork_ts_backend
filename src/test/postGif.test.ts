@@ -18,8 +18,8 @@ describe('Post GIFS Endpoint', () => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash('password123', salt);
 
-    await pool.query(
-      'INSERT into "users" (firstName, lastName, email, password, gender, jobrole, department, address) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
+      await pool.query(
+      'INSERT into "users" (first_name, last_name, email, password, gender, job_role, department, address) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
       [
         'Dave',
         'Ogunleye',
@@ -36,6 +36,10 @@ describe('Post GIFS Endpoint', () => {
       email: 'dave@gmail.com',
       password: 'password123',
     });
+    if (!res.body || !res.body.data || !res.body.data.token) {
+      console.log('Error signing in:', res.body);
+    }
+
     token = res.body.data.token || res.body.token;
   });
 
