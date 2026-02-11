@@ -37,7 +37,6 @@ export const signInSchemaDTO = z.object({
 export const editUserSchema = z.object({
   firstName: z.string().min(2, 'First name is required').max(40),
   lastName: z.string().min(2, 'Last name is required').max(40),
-  email: z.email('Invalid email address'),
   gender: z.enum(['male', 'female'], 'Gender must be either male or female'),
   department: z.string().min(1, 'Department is required'),
   address: z.string().min(1, 'Address is required'),
@@ -45,15 +44,11 @@ export const editUserSchema = z.object({
 
 export const editUserSchemaDTO = z.object({
   body: editUserSchema,
-  params: z.object({
-    userId: z.string().min(1, 'User ID is required'),
-  }),
 });
 
 // Change Password schema validation
 
 export const changePasswordSchema = z.object({
-  email: z.email('Invalid email address').min(3, 'A valid email is required'),
   currentPassword: z.string().min(6, 'Current password is required'),
   newPassword: z
     .string()
@@ -63,9 +58,6 @@ export const changePasswordSchema = z.object({
 
 export const changePasswordSchemaDTO = z.object({
   body: changePasswordSchema,
-  params: z.object({
-    userId: z.string().min(1, 'User ID is required'),
-  }),
 });
 
 // ------------------- GIF SCHEMAS --------------------

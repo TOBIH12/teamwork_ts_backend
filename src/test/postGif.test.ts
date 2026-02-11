@@ -18,7 +18,7 @@ describe('Post GIFS Endpoint', () => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash('password123', salt);
 
-      await pool.query(
+    await pool.query(
       'INSERT into "users" (first_name, last_name, email, password, gender, job_role, department, address) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
       [
         'Dave',

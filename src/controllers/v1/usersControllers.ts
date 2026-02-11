@@ -158,17 +158,6 @@ export default class UserControllers {
 
   async editUserDetails(req: Request, res: Response): Promise<Response> {
     try {
-      const { userId } = req.params;
-
-      if (!userId) {
-        return res.status(400).json({
-          status: 'params error',
-          error: 'User ID not found in request parameters',
-        });
-      }
-
-      const parsedUserId = parseInt(userId, 10);
-
       const reqUserId = req.user?.user_id;
 
       const user = await pool.query(fetchUserByIdQuery, [reqUserId]);
@@ -180,33 +169,11 @@ export default class UserControllers {
         });
       }
 
-      if (reqUserId !== parsedUserId) {
-        return res.status(403).json({
-          status: 'error',
-          error: `Unauthorized to edit another user's details`,
-        });
-      }
-
-      const { firstName, lastName, email, gender, department, address } =
-        req.body;
-
-      if (email && email !== user.rows[0].email) {
-        const newEmail = email.toLowerCase();
-
-        const emailExists = await pool.query(checkEmailQuery, [newEmail]);
-
-        if (emailExists.rows && emailExists.rows.length > 0) {
-          return res.status(400).json({
-            status: 'error',
-            error: 'Email already exists',
-          });
-        }
-      }
+      const { firstName, lastName, gender, department, address } = req.body;
 
       const updateUserValues = [
         firstName,
         lastName,
-        email,
         gender,
         department,
         address,
@@ -233,7 +200,6 @@ export default class UserControllers {
           userId: updatedUserInfo.user_id,
           firstName: updatedUserInfo.first_name,
           lastName: updatedUserInfo.last_name,
-          email: updatedUserInfo.email,
           gender: updatedUserInfo.gender,
           department: updatedUserInfo.department,
           address: updatedUserInfo.address,
@@ -251,17 +217,6 @@ export default class UserControllers {
 
   async changePassword(req: Request, res: Response): Promise<Response> {
     try {
-      const { userId } = req.params;
-
-      if (!userId) {
-        return res.status(400).json({
-          status: 'params error',
-          error: 'User ID not found in request parameters',
-        });
-      }
-
-      const parsedUserId = parseInt(userId, 10);
-
       const reqUserId = req.user?.user_id;
 
       const user = await pool.query(fetchUserByIdQuery, [reqUserId]);
@@ -273,33 +228,7 @@ export default class UserControllers {
         });
       }
 
-      if (reqUserId !== parsedUserId) {
-        return res.status(403).json({
-          status: 'error',
-          error: `Unauthorized to change another user's password`,
-        });
-      }
-
-      const { email, currentPassword, newPassword, confirmNewPassword } =
-        req.body;
-
-      const userEmail = email.toLowerCase();
-
-      const emailExists = await pool.query(checkEmailQuery, [userEmail]);
-
-      if (!emailExists || emailExists.rows.length === 0) {
-        return res.status(400).json({
-          status: 'error',
-          error: 'Email address is not recognized',
-        });
-      }
-
-      if (emailExists.rows[0].email !== user.rows[0].email) {
-        return res.status(400).json({
-          status: 'error',
-          error: `Wrong Email address for current user`,
-        });
-      }
+      const { currentPassword, newPassword, confirmNewPassword } = req.body;
 
       const checkPassword = await bcrypt.compare(
         currentPassword,
@@ -353,17 +282,6 @@ export default class UserControllers {
 
   async uploadUserImage(req: Request, res: Response): Promise<Response> {
     try {
-      const { userId } = req.params;
-
-      if (!userId) {
-        return res.status(400).json({
-          status: 'params error',
-          error: 'User ID not found in request parameters',
-        });
-      }
-
-      const parsedUserId = parseInt(userId, 10);
-
       const reqUserId = req.user?.user_id;
 
       const user = await pool.query(fetchUserByIdQuery, [reqUserId]);
@@ -372,13 +290,6 @@ export default class UserControllers {
         return res.status(404).json({
           status: 'error',
           error: 'User not found',
-        });
-      }
-
-      if (reqUserId !== parsedUserId) {
-        return res.status(403).json({
-          status: 'error',
-          error: `Unauthorized to change another user's image`,
         });
       }
 

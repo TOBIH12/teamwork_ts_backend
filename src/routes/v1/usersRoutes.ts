@@ -28,19 +28,19 @@ router.post(
   userControllers.signInUser
 );
 router.patch(
-  '/editUserDetails/:userId',
+  '/editUserDetails',
   validationMiddleware(editUserSchemaDTO),
   authMiddleware,
   userControllers.editUserDetails
 );
 router.patch(
-  '/auth/changePassword/:userId',
+  '/auth/changePassword',
   validationMiddleware(changePasswordSchemaDTO),
   authMiddleware,
   userControllers.changePassword
 );
 router.patch(
-  '/uploadUserImage/:userId',
+  '/uploadUserImage',
   authMiddleware,
   uploadedUserImage,
   userControllers.uploadUserImage
