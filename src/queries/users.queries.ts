@@ -8,7 +8,16 @@ export const insertUserQuery = `INSERT INTO "users" (first_name, last_name, emai
 
 export const fetchUserByIdQuery = `SELECT * FROM "users" WHERE "user_id" = $1`;
 
-export const updateUserQuery = `UPDATE "users" SET first_name = $1, last_name = $2, gender = $3, department = $4, address = $5 WHERE user_id = $6 RETURNING *`;
+export const updateUserQuery = 
+`UPDATE "users" 
+SET 
+first_name = COALESCE(NULLIF($1, ''), first_name),
+ last_name = COALESCE(NULLIF($2, ''), last_name), 
+ gender = COALESCE(NULLIF($3, ''), gender), 
+ department = COALESCE(NULLIF($4, ''), department), 
+ address = COALESCE(NULLIF($5, ''), address)
+  WHERE user_id = $6 
+  RETURNING *`;
 
 export const updatePasswordQuery = `UPDATE "users" SET password = $1 WHERE user_id = $2 RETURNING *`;
 

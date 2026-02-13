@@ -35,11 +35,34 @@ export const signInSchemaDTO = z.object({
 // Edit User schema validation
 
 export const editUserSchema = z.object({
-  firstName: z.string().min(2, 'First name is required').max(40),
-  lastName: z.string().min(2, 'Last name is required').max(40),
-  gender: z.enum(['male', 'female'], 'Gender must be either male or female'),
-  department: z.string().min(1, 'Department is required'),
-  address: z.string().min(1, 'Address is required'),
+  firstName: z.preprocess(
+    (value) => (value === "" || undefined ? undefined : value),
+    z.string().optional().refine((value) => value === undefined || (value.length >= 2 && value.length <= 40), {
+      message: 'First name must be between 2 and 40 characters long',
+    })
+  ),
+  lastName: z.preprocess(
+    (value) => (value === "" || undefined ? undefined : value),
+    z.string().optional().refine((value) => value === undefined || (value.length >= 2 && value.length <= 40), {
+      message: 'Last name must be between 2 and 40 characters long',
+    })
+  ),
+  gender:  z.preprocess(
+    (value) => (value === "" || undefined ? undefined : value),
+    z.enum(['male', 'female'], 'Gender must be either male or female').optional().refine((value) => value === undefined || value === 'male' || value === 'female')
+  ),
+  department: z.preprocess(
+    (value) => (value === "" || undefined ? undefined : value),
+     z.string().optional().refine((value) => value === undefined || value.length >= 3, {
+    message: 'Department is required',
+  })
+  ),
+  address:  z.preprocess(
+    (value) => (value === "" || undefined ? undefined : value),
+     z.string().optional().refine((value) => value === undefined || value.length >= 3, {
+    message: 'Address is required',
+  })
+  ),
 });
 
 export const editUserSchemaDTO = z.object({

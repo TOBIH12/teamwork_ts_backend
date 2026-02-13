@@ -160,15 +160,6 @@ export default class UserControllers {
     try {
       const reqUserId = req.user?.user_id;
 
-      const user = await pool.query(fetchUserByIdQuery, [reqUserId]);
-
-      if (!user.rows[0] || user.rows.length === 0) {
-        return res.status(404).json({
-          status: 'error',
-          error: 'User not found',
-        });
-      }
-
       const { firstName, lastName, gender, department, address } = req.body;
 
       const updateUserValues = [
@@ -283,15 +274,6 @@ export default class UserControllers {
   async uploadUserImage(req: Request, res: Response): Promise<Response> {
     try {
       const reqUserId = req.user?.user_id;
-
-      const user = await pool.query(fetchUserByIdQuery, [reqUserId]);
-
-      if (!user.rows[0] || user.rows.length === 0) {
-        return res.status(404).json({
-          status: 'error',
-          error: 'User not found',
-        });
-      }
 
       if (!req.file) {
         return res.status(400).json({

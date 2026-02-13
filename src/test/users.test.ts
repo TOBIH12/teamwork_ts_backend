@@ -203,6 +203,29 @@ describe('Edit User Details Endpoint', () => {
     expect(res.body.data).to.have.property('lastName', 'Sam');
   });
 
+  it('should update sucessfully with misssing fields', async () => {
+       const res = await request(app)
+      .patch(`/api/v1/users/editUserDetails`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        firstName: 'Jimmy',
+        lastName: 'Samuel',
+        gender: '',
+        department: '',
+        address: '',
+      });
+    expect(res.status).to.equal(200);
+    expect(res.body).to.be.an('object');
+    expect(res.body).to.have.property('status', 'success');
+    expect(res.body.data).to.have.property(
+      'message',
+      'User details updated successfully'
+    );
+    expect(res.body.data).to.have.property('userId', parseInt(userId, 10));
+    expect(res.body.data).to.have.property('firstName', 'Jimmy');
+    expect(res.body.data).to.have.property('gender', 'male');
+  });
+
   it('should return error 401 for unauthorized edit attempt', async () => {
     const res = await request(app).patch(`/api/v1/users/editUserDetails`).send({
       firstName: 'Jim',
