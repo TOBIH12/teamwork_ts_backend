@@ -6,7 +6,6 @@
   "scripts": {
     "dev": "nodemon",
     "build": "tsc",
-    "pretest": "db-migrate up -e test",
     "test": "cross-env NODE_ENV=test mocha -r ts-node/register \"src/test/**/*.ts\" --timeout 30000",
     "start": "node dist/server.js",
     "lint": "eslint .",
