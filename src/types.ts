@@ -6,6 +6,9 @@ declare global {
     interface Request {
       user?: UserInfo;
       file?: Express.Multer.File;
+      params?: {
+        userId?: string;
+      };
     }
   }
 }

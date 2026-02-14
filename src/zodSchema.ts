@@ -32,6 +32,57 @@ export const signInSchemaDTO = z.object({
   body: signInSchema,
 });
 
+// Edit User schema validation
+
+export const editUserSchema = z.object({
+  firstName: z.preprocess(
+    (value) => (value === "" || undefined ? undefined : value),
+    z.string().optional().refine((value) => value === undefined || (value.length >= 2 && value.length <= 40), {
+      message: 'First name must be between 2 and 40 characters long',
+    })
+  ),
+  lastName: z.preprocess(
+    (value) => (value === "" || undefined ? undefined : value),
+    z.string().optional().refine((value) => value === undefined || (value.length >= 2 && value.length <= 40), {
+      message: 'Last name must be between 2 and 40 characters long',
+    })
+  ),
+  gender:  z.preprocess(
+    (value) => (value === "" || undefined ? undefined : value),
+    z.enum(['male', 'female'], 'Gender must be either male or female').optional().refine((value) => value === undefined || value === 'male' || value === 'female')
+  ),
+  department: z.preprocess(
+    (value) => (value === "" || undefined ? undefined : value),
+     z.string().optional().refine((value) => value === undefined || value.length >= 3, {
+    message: 'Department is required',
+  })
+  ),
+  address:  z.preprocess(
+    (value) => (value === "" || undefined ? undefined : value),
+     z.string().optional().refine((value) => value === undefined || value.length >= 3, {
+    message: 'Address is required',
+  })
+  ),
+});
+
+export const editUserSchemaDTO = z.object({
+  body: editUserSchema,
+});
+
+// Change Password schema validation
+
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(6, 'Current password is required'),
+  newPassword: z
+    .string()
+    .min(6, 'New password must be at least 6 characters long'),
+  confirmNewPassword: z.string().min(6, 'Please confirm your new password'),
+});
+
+export const changePasswordSchemaDTO = z.object({
+  body: changePasswordSchema,
+});
+
 // ------------------- GIF SCHEMAS --------------------
 
 // Gif POST schema validation

@@ -14,6 +14,6 @@ const upload = multer({
   },
 });
 
-const uploadedGif = upload.single('gif');
+export const uploadedGif = upload.single('gif');
 
-export default uploadedGif;
+export const uploadedUserImage = upload.single('userImg');
