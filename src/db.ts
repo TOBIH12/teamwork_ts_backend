@@ -4,16 +4,26 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const env = process.env.NODE_ENV || 'dev';
-const config = require('../database.json')[env];
 
 const { Pool } = pkg;
 
-const pool = new Pool({
-  user: config.user,
-  host: config.host,
-  database: config.database,
-  password: config.password,
-  port: config.port || 5432,
-});
+const configs: Record<string, any> = {
+  dev: {
+    user: process.env.DB_USER,
+    host: process.env.DB_HOST,
+    database: process.env.DB_NAME,
+    password: process.env.DB_PASSWORD,
+    port: Number(process.env.DB_PORT) || 5432,
+  },
+  test: {
+    user: process.env.TEST_DB_USER,
+    host: process.env.TEST_DB_HOST,
+    database: process.env.TEST_DB_NAME,
+    password: process.env.TEST_DB_PASSWORD,
+    port: Number(process.env.TEST_DB_PORT) || 5432,
+  },
+};
+
+const pool = new Pool(configs[env]);
 
 export default pool;
