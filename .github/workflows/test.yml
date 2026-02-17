@@ -64,7 +64,7 @@ jobs:
           TEST_DB_PASSWORD: ${{ secrets.TEST_DB_PASSWORD }}
           TEST_DB_NAME: ${{ secrets.TEST_DB_NAME }}
         run: |
-          npx db-migrate up    
+          npx db-migrate up --env test  
 
       - name: Run tests
         run: npm test
