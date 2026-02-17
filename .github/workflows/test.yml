@@ -2,9 +2,7 @@ name: Github Actions CI
 
 on:
   push:
-    branches: ["develop"]
   pull_request:
-    branches: ["develop"]
 
 jobs:
   build:
@@ -56,7 +54,7 @@ jobs:
           }' > database.json  
 
       - name: Install db-migrate-pg
-          run: npm install --save-dev db-migrate-pg    
+        run: npm install --save-dev db-migrate-pg    
 
       - name: Run database migrations
         env:
