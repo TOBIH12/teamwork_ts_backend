@@ -55,6 +55,9 @@ jobs:
             }
           }' > database.json  
 
+      - name: Install db-migrate-pg
+          run: npm install --save-dev db-migrate-pg    
+
       - name: Run database migrations
         env:
           NODE_ENV: test
