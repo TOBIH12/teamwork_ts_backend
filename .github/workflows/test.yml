@@ -1,0 +1,80 @@
+name: Github Actions CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: ${{ secrets.TEST_DB_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.TEST_DB_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.TEST_DB_NAME }}
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd=pg_isready
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Create temporary database.json
+        run: |
+          echo '{
+            "test": {
+              "driver": "pg",
+              "host": "${{ secrets.TEST_DB_HOST }}",
+              "user": "${{ secrets.TEST_DB_USER }}",
+              "password": "${{ secrets.TEST_DB_PASSWORD }}",
+              "database": "${{ secrets.TEST_DB_NAME }}",
+              "port": "${{ secrets.TEST_DB_PORT }}"
+            }
+          }' > database.json  
+
+      - name: Install db-migrate-pg
+        run: npm install --save-dev db-migrate-pg    
+
+      - name: Run database migrations
+        env:
+          NODE_ENV: test
+          TEST_DB_HOST: localhost
+          TEST_DB_PORT: 5432
+          TEST_DB_USER: ${{ secrets.TEST_DB_USER }}
+          TEST_DB_PASSWORD: ${{ secrets.TEST_DB_PASSWORD }}
+          TEST_DB_NAME: ${{ secrets.TEST_DB_NAME }}
+        run: |
+          npx db-migrate up --env test  
+
+      - name: Run tests
+        run: npm test
+        env:
+          NODE_ENV: test
+          TEST_DB_HOST: ${{ secrets.TEST_DB_HOST }}
+          TEST_DB_PORT: ${{ secrets.TEST_DB_PORT }}
+          TEST_DB_USER: ${{ secrets.TEST_DB_USER }}
+          TEST_DB_PASSWORD: ${{ secrets.TEST_DB_PASSWORD }}
+          TEST_DB_NAME: ${{ secrets.TEST_DB_NAME }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
+          CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
+          CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
