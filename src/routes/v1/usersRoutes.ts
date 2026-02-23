@@ -27,16 +27,8 @@ router.post(
   validationMiddleware(signInSchemaDTO),
   userControllers.signInUser
 );
-router.get(
-  '/getUsers',
-  authMiddleware,
-  userControllers.getUsers
-);
-router.get(
-  '/getUserById/:userId',
-  authMiddleware,
-  userControllers.getUserById
-)
+router.get('/getUsers', authMiddleware, userControllers.getUsers);
+router.get('/getUserById/:userId', authMiddleware, userControllers.getUserById);
 router.patch(
   '/editUserDetails',
   validationMiddleware(editUserSchemaDTO),

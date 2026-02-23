@@ -36,32 +36,57 @@ export const signInSchemaDTO = z.object({
 
 export const editUserSchema = z.object({
   firstName: z.preprocess(
-    (value) => (value === "" || undefined ? undefined : value),
-    z.string().optional().refine((value) => value === undefined || (value.length >= 2 && value.length <= 40), {
-      message: 'First name must be between 2 and 40 characters long',
-    })
+    (value) => (value === '' || undefined ? undefined : value),
+    z
+      .string()
+      .optional()
+      .refine(
+        (value) =>
+          value === undefined || (value.length >= 2 && value.length <= 40),
+        {
+          message: 'First name must be between 2 and 40 characters long',
+        }
+      )
   ),
   lastName: z.preprocess(
-    (value) => (value === "" || undefined ? undefined : value),
-    z.string().optional().refine((value) => value === undefined || (value.length >= 2 && value.length <= 40), {
-      message: 'Last name must be between 2 and 40 characters long',
-    })
+    (value) => (value === '' || undefined ? undefined : value),
+    z
+      .string()
+      .optional()
+      .refine(
+        (value) =>
+          value === undefined || (value.length >= 2 && value.length <= 40),
+        {
+          message: 'Last name must be between 2 and 40 characters long',
+        }
+      )
   ),
-  gender:  z.preprocess(
-    (value) => (value === "" || undefined ? undefined : value),
-    z.enum(['male', 'female'], 'Gender must be either male or female').optional().refine((value) => value === undefined || value === 'male' || value === 'female')
+  gender: z.preprocess(
+    (value) => (value === '' || undefined ? undefined : value),
+    z
+      .enum(['male', 'female'], 'Gender must be either male or female')
+      .optional()
+      .refine(
+        (value) => value === undefined || value === 'male' || value === 'female'
+      )
   ),
   department: z.preprocess(
-    (value) => (value === "" || undefined ? undefined : value),
-     z.string().optional().refine((value) => value === undefined || value.length >= 3, {
-    message: 'Department is required',
-  })
+    (value) => (value === '' || undefined ? undefined : value),
+    z
+      .string()
+      .optional()
+      .refine((value) => value === undefined || value.length >= 3, {
+        message: 'Department is required',
+      })
   ),
-  address:  z.preprocess(
-    (value) => (value === "" || undefined ? undefined : value),
-     z.string().optional().refine((value) => value === undefined || value.length >= 3, {
-    message: 'Address is required',
-  })
+  address: z.preprocess(
+    (value) => (value === '' || undefined ? undefined : value),
+    z
+      .string()
+      .optional()
+      .refine((value) => value === undefined || value.length >= 3, {
+        message: 'Address is required',
+      })
   ),
 });
 

@@ -151,7 +151,7 @@ describe('Sign In User Endpoint', () => {
 });
 
 describe('Get Users Endpoint', () => {
-    let token = '';
+  let token = '';
 
   before(async () => {
     const salt = await bcrypt.genSalt(10);
@@ -171,7 +171,7 @@ describe('Get Users Endpoint', () => {
       ]
     );
 
-     await pool.query(
+    await pool.query(
       'INSERT into "users" (first_name, last_name, email, password, gender, job_role, department, address) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
       [
         'Samuel',
@@ -192,35 +192,45 @@ describe('Get Users Endpoint', () => {
     token = res.body.data.token || res.body.token;
   });
 
-   it('should get all users successfully', async () => {
-        const res = await request(app).get('/api/v1/users/getUsers')
-        .set('Authorization', `Bearer ${token}`);
-        expect(res.status).to.equal(200);
-        expect(res.body).to.be.an('object');
-        expect(res.body).to.have.property('status', 'success');
-        expect(res.body.data).to.have.property('message', 'Users fetched successfully');
-        expect(res.body.data).to.have.property('usersCount', 2);
-        expect(res.body.data.users).to.be.an('array');
-        expect(res.body.data.users[0]).to.have.property('email', 'dave@gmail.com');
-        expect(res.body.data.users[1]).to.have.property('email', 'samuel@gmail.com');
-    });
+  it('should get all users successfully', async () => {
+    const res = await request(app)
+      .get('/api/v1/users/getUsers')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).to.equal(200);
+    expect(res.body).to.be.an('object');
+    expect(res.body).to.have.property('status', 'success');
+    expect(res.body.data).to.have.property(
+      'message',
+      'Users fetched successfully'
+    );
+    expect(res.body.data).to.have.property('usersCount', 2);
+    expect(res.body.data.users).to.be.an('array');
+    expect(res.body.data.users[0]).to.have.property('email', 'dave@gmail.com');
+    expect(res.body.data.users[1]).to.have.property(
+      'email',
+      'samuel@gmail.com'
+    );
+  });
 
-    it('should return error 401 for unauthorized access', async () => {
-        const res = await request(app).get('/api/v1/users/getUsers');
-        expect(res.status).to.equal(401);
-        expect(res.body).to.be.an('object');
-        expect(res.body).to.have.property('status', 'error');
-        expect(res.body).to.have.property('error', `Authorization token is missing`);
-    });
+  it('should return error 401 for unauthorized access', async () => {
+    const res = await request(app).get('/api/v1/users/getUsers');
+    expect(res.status).to.equal(401);
+    expect(res.body).to.be.an('object');
+    expect(res.body).to.have.property('status', 'error');
+    expect(res.body).to.have.property(
+      'error',
+      `Authorization token is missing`
+    );
+  });
 
-      after(async () => {
-        await pool.query('TRUNCATE TABLE users RESTART IDENTITY CASCADE');
-      });
-    });
+  after(async () => {
+    await pool.query('TRUNCATE TABLE users RESTART IDENTITY CASCADE');
+  });
+});
 
 describe('Get User By Id Endpoint', () => {
-    let token = '';
-    let userId = '';
+  let token = '';
+  let userId = '';
 
   before(async () => {
     const salt = await bcrypt.genSalt(10);
@@ -249,12 +259,16 @@ describe('Get User By Id Endpoint', () => {
   });
 
   it('should get user by id successfully', async () => {
-    const res = await request(app).get(`/api/v1/users/getUserById/${userId}`)
-    .set('Authorization', `Bearer ${token}`);
+    const res = await request(app)
+      .get(`/api/v1/users/getUserById/${userId}`)
+      .set('Authorization', `Bearer ${token}`);
     expect(res.status).to.equal(200);
     expect(res.body).to.be.an('object');
     expect(res.body).to.have.property('status', 'success');
-    expect(res.body.data).to.have.property('message', 'User fetched successfully');
+    expect(res.body.data).to.have.property(
+      'message',
+      'User fetched successfully'
+    );
     expect(res.body.data).to.have.property('email', 'dave@gmail.com');
   });
 
@@ -263,22 +277,26 @@ describe('Get User By Id Endpoint', () => {
     expect(res.status).to.equal(401);
     expect(res.body).to.be.an('object');
     expect(res.body).to.have.property('status', 'error');
-    expect(res.body).to.have.property('error', `Authorization token is missing`);
+    expect(res.body).to.have.property(
+      'error',
+      `Authorization token is missing`
+    );
   });
 
-   it('should return error 404 for non existing user id', async () => {
-    const res = await request(app).get(`/api/v1/users/getUserById/9999`)
-    .set('Authorization', `Bearer ${token}`);
+  it('should return error 404 for non existing user id', async () => {
+    const res = await request(app)
+      .get(`/api/v1/users/getUserById/9999`)
+      .set('Authorization', `Bearer ${token}`);
     expect(res.status).to.equal(404);
     expect(res.body).to.be.an('object');
     expect(res.body).to.have.property('status', 'error');
     expect(res.body).to.have.property('error', 'User not found');
   });
 
-   after(async () => {
+  after(async () => {
     await pool.query('TRUNCATE TABLE users RESTART IDENTITY CASCADE');
   });
-})
+});
 
 describe('Edit User Details Endpoint', () => {
   let token = '';
@@ -334,7 +352,7 @@ describe('Edit User Details Endpoint', () => {
   });
 
   it('should update sucessfully with misssing fields', async () => {
-       const res = await request(app)
+    const res = await request(app)
       .patch(`/api/v1/users/editUserDetails`)
       .set('Authorization', `Bearer ${token}`)
       .send({
@@ -539,10 +557,10 @@ describe('Upload user image endpoint', () => {
 });
 
 describe('Update User Role Endpoint', () => {
-     let token = '';
-     let reqUserId = '';
-     let resUserId1 = '';
-     let resUserId2 = '';
+  let token = '';
+  let reqUserId = '';
+  let resUserId1 = '';
+  let resUserId2 = '';
 
   before(async () => {
     const salt = await bcrypt.genSalt(10);
@@ -562,7 +580,7 @@ describe('Update User Role Endpoint', () => {
       ]
     );
 
-   const resUser1 = await pool.query(
+    const resUser1 = await pool.query(
       'INSERT into "users" (first_name, last_name, email, password, gender, job_role, department, address) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
       [
         'Samuel',
@@ -578,7 +596,7 @@ describe('Update User Role Endpoint', () => {
 
     resUserId1 = resUser1.rows[0].user_id;
 
-   const resUser2 = await pool.query(
+    const resUser2 = await pool.query(
       'INSERT into "users" (first_name, last_name, email, password, gender, job_role, department, address) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
       [
         'Elizabeth',
@@ -593,7 +611,7 @@ describe('Update User Role Endpoint', () => {
     );
 
     resUserId2 = resUser2.rows[0].user_id;
-    
+
     const res = await request(app).post('/api/v1/users/signin').send({
       email: 'dave@gmail.com',
       password: 'password123',
@@ -616,8 +634,8 @@ describe('Update User Role Endpoint', () => {
 
   it('should update user role to employee successfully', async () => {
     const res = await request(app)
-       .patch(`/api/v1/users/admin/updateRole/${resUserId2}`)
-       .set('Authorization', `Bearer ${token}`);
+      .patch(`/api/v1/users/admin/updateRole/${resUserId2}`)
+      .set('Authorization', `Bearer ${token}`);
     expect(res.status).to.equal(200);
     expect(res.body).to.have.property('status', 'success');
     expect(res.body.data).to.have.property(
@@ -627,8 +645,9 @@ describe('Update User Role Endpoint', () => {
   });
 
   it('should return error 401 for unauthorized role update attempt', async () => {
-    const res = await request(app)
-      .patch(`/api/v1/users/admin/updateRole/${resUserId1}`);
+    const res = await request(app).patch(
+      `/api/v1/users/admin/updateRole/${resUserId1}`
+    );
     expect(res.status).to.equal(401);
     expect(res.body).to.have.property('status', 'error');
     expect(res.body).to.have.property(
@@ -639,13 +658,13 @@ describe('Update User Role Endpoint', () => {
 
   after(async () => {
     await pool.query('TRUNCATE TABLE users RESTART IDENTITY CASCADE');
-    }); 
+  });
 });
 
 describe('Delete User Endpoint', () => {
-       let token = '';
-     let reqUserId = '';
-     let resUserId = '';
+  let token = '';
+  let reqUserId = '';
+  let resUserId = '';
 
   before(async () => {
     const salt = await bcrypt.genSalt(10);
@@ -665,7 +684,7 @@ describe('Delete User Endpoint', () => {
       ]
     );
 
-   const resUser = await pool.query(
+    const resUser = await pool.query(
       'INSERT into "users" (first_name, last_name, email, password, gender, job_role, department, address) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
       [
         'Samuel',
@@ -680,7 +699,7 @@ describe('Delete User Endpoint', () => {
     );
 
     resUserId = resUser.rows[0].user_id;
-     
+
     const res = await request(app).post('/api/v1/users/signin').send({
       email: 'dave@gmail.com',
       password: 'password123',
@@ -702,8 +721,9 @@ describe('Delete User Endpoint', () => {
   });
 
   it('should return error 401 for unauthorized delete attempt', async () => {
-    const res = await request(app)
-      .delete(`/api/v1/users/admin/deleteUser/${resUserId}`);
+    const res = await request(app).delete(
+      `/api/v1/users/admin/deleteUser/${resUserId}`
+    );
     expect(res.status).to.equal(401);
     expect(res.body).to.have.property('status', 'error');
     expect(res.body).to.have.property(
@@ -715,5 +735,5 @@ describe('Delete User Endpoint', () => {
   after(async () => {
     await pool.query('TRUNCATE TABLE users RESTART IDENTITY CASCADE');
     await pool.end();
-    });
+  });
 });

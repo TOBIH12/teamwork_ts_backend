@@ -18,7 +18,6 @@ import {
   getUsersQuery,
 } from '../../queries/users.queries';
 import { registerSchema, signInSchema } from '../../zodSchema';
-import { error } from 'console';
 
 dotenv.config();
 
@@ -165,7 +164,11 @@ export default class UserControllers {
     try {
       const usersResponse = await pool.query(getUsersQuery);
 
-      if(!usersResponse || !usersResponse.rows || usersResponse.rows.length === 0) {
+      if (
+        !usersResponse ||
+        !usersResponse.rows ||
+        usersResponse.rows.length === 0
+      ) {
         return res.status(404).json({
           status: 'error',
           error: 'No users found',
@@ -173,21 +176,20 @@ export default class UserControllers {
       }
 
       const users = usersResponse.rows;
-      
+
       return res.status(200).json({
         status: 'success',
         data: {
           message: 'Users fetched successfully',
           usersCount: users.length,
-          users: users,
+          users,
         },
       });
-      
     } catch (error: unknown) {
-        return res.status(500).json({
-          status: 'error',
-          error: (error as string) || 'Server Error',
-        });
+      return res.status(500).json({
+        status: 'error',
+        error: (error as string) || 'Server Error',
+      });
     }
   }
 
@@ -195,18 +197,32 @@ export default class UserControllers {
 
   async getUserById(req: Request, res: Response): Promise<Response> {
     try {
-      const userId = req.params.userId;
+      const { userId } = req.params;
 
       const userResponse = await pool.query(fetchUserByIdQuery, [userId]);
 
-      if (!userResponse || !userResponse.rows || userResponse.rows.length === 0) {
+      if (
+        !userResponse ||
+        !userResponse.rows ||
+        userResponse.rows.length === 0
+      ) {
         return res.status(404).json({
           status: 'error',
           error: 'User not found',
         });
       }
 
-      const { user_id, first_name, last_name, email, gender, job_role, department, address, created_on } = userResponse.rows[0];
+      const {
+        user_id,
+        first_name,
+        last_name,
+        email,
+        gender,
+        job_role,
+        department,
+        address,
+        created_on,
+      } = userResponse.rows[0];
 
       return res.status(200).json({
         status: 'success',
@@ -223,13 +239,11 @@ export default class UserControllers {
           createdOn: created_on,
         },
       });
-
     } catch (error: unknown) {
       return res.status(500).json({
         status: 'error',
         error: (error as string) || 'Server Error',
       });
-      
     }
   }
   // Edit User details
@@ -405,7 +419,7 @@ export default class UserControllers {
 
   async updateUserRole(req: Request, res: Response): Promise<Response> {
     try {
-      const userId = req.params.userId;
+      const { userId } = req.params;
 
       const user = await pool.query(fetchUserByIdQuery, [userId]);
 
@@ -418,23 +432,23 @@ export default class UserControllers {
 
       const { job_role, user_id } = user.rows[0];
 
-      if(job_role === 'super_admin') {
+      if (job_role === 'super_admin') {
         return res.status(403).json({
           status: 'error',
-          error: `Cannot change super admin's role`
+          error: `Cannot change super admin's role`,
         });
       }
 
       if (job_role === 'admin') {
         const updatedUser = await pool.query(removeAdminRoleQuery, [user_id]);
 
-        if(!updatedUser || updatedUser.rows.length === 0) {
+        if (!updatedUser || updatedUser.rows.length === 0) {
           return res.status(400).json({
             status: 'error',
-            error: `Failed to update this user's role`
+            error: `Failed to update this user's role`,
           });
         }
-          const { first_name, last_name } = updatedUser.rows[0];
+        const { first_name, last_name } = updatedUser.rows[0];
 
         return res.status(200).json({
           status: 'success',
@@ -442,26 +456,24 @@ export default class UserControllers {
             message: `${first_name} ${last_name}'s role has been updated to employee`,
           },
         });
-      } else {
-        const updatedUser = await pool.query(makeUserAdminQuery, [user_id]);
+      }
+      const updatedUser = await pool.query(makeUserAdminQuery, [user_id]);
 
-        if(!updatedUser || updatedUser.rows.length === 0) {
-          return res.status(400).json({
-            status: 'error',
-            error: `Failed to update this user's role`
-          });
-        }
-
-        const { first_name, last_name } = updatedUser.rows[0];
-
-        return res.status(200).json({
-          status: 'success',
-          data: {
-            message: `${first_name} ${last_name} has been promoted to admin`,
-          },
+      if (!updatedUser || updatedUser.rows.length === 0) {
+        return res.status(400).json({
+          status: 'error',
+          error: `Failed to update this user's role`,
         });
       }
-      
+
+      const { first_name, last_name } = updatedUser.rows[0];
+
+      return res.status(200).json({
+        status: 'success',
+        data: {
+          message: `${first_name} ${last_name} has been promoted to admin`,
+        },
+      });
     } catch (error: unknown) {
       return res.status(500).json({
         status: 'error',
@@ -472,7 +484,7 @@ export default class UserControllers {
 
   async deleteUser(req: Request, res: Response): Promise<Response> {
     try {
-      const userId = req.params.userId;
+      const { userId } = req.params;
 
       const user = await pool.query(fetchUserByIdQuery, [userId]);
 
@@ -485,16 +497,16 @@ export default class UserControllers {
 
       const { user_id, first_name, last_name, job_role } = user.rows[0];
 
-      if(job_role === 'super_admin') {
+      if (job_role === 'super_admin') {
         return res.status(403).json({
           status: 'error',
-          error: 'Super admin cannot be deleted'
+          error: 'Super admin cannot be deleted',
         });
       }
 
       const deleteUser = await pool.query(deleteUserQuery, [user_id]);
 
-      if(!deleteUser || deleteUser.rows.length === 0) {
+      if (!deleteUser || deleteUser.rows.length === 0) {
         return res.status(400).json({
           status: 'error',
           error: 'Failed to delete user',
@@ -508,7 +520,7 @@ export default class UserControllers {
         },
       });
     } catch (error: unknown) {
-       return res.status(500).json({
+      return res.status(500).json({
         status: 'error',
         error: (error as string) || 'Server Error',
       });
