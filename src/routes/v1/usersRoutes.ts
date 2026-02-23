@@ -27,6 +27,16 @@ router.post(
   validationMiddleware(signInSchemaDTO),
   userControllers.signInUser
 );
+router.get(
+  '/getUsers',
+  authMiddleware,
+  userControllers.getUsers
+);
+router.get(
+  '/getUserById/:userId',
+  authMiddleware,
+  userControllers.getUserById
+)
 router.patch(
   '/editUserDetails',
   validationMiddleware(editUserSchemaDTO),
@@ -44,6 +54,18 @@ router.patch(
   authMiddleware,
   uploadedUserImage,
   userControllers.uploadUserImage
+);
+router.patch(
+  '/admin/updateRole/:userId',
+  authMiddleware,
+  adminAuthentication,
+  userControllers.updateUserRole
+);
+router.delete(
+  '/admin/deleteUser/:userId',
+  authMiddleware,
+  adminAuthentication,
+  userControllers.deleteUser
 );
 
 export default router;

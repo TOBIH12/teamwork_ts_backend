@@ -20,7 +20,7 @@ const adminAuthentication = (
     });
   }
 
-  if (role.trim().toLowerCase() !== 'admin') {
+  if (role.trim().toLowerCase() !== 'admin' && role.trim().toLowerCase() !== 'super_admin') {
     return res.status(403).json({
       status: 'error',
       error: 'Forbidden.',

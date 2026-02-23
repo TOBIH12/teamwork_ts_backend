@@ -12,8 +12,13 @@ import {
   updateUserQuery,
   updatePasswordQuery,
   updateUserImgquery,
+  makeUserAdminQuery,
+  removeAdminRoleQuery,
+  deleteUserQuery,
+  getUsersQuery,
 } from '../../queries/users.queries';
 import { registerSchema, signInSchema } from '../../zodSchema';
+import { error } from 'console';
 
 dotenv.config();
 
@@ -154,6 +159,79 @@ export default class UserControllers {
     }
   }
 
+  // Get Users
+
+  async getUsers(req: Request, res: Response): Promise<Response> {
+    try {
+      const usersResponse = await pool.query(getUsersQuery);
+
+      if(!usersResponse || !usersResponse.rows || usersResponse.rows.length === 0) {
+        return res.status(404).json({
+          status: 'error',
+          error: 'No users found',
+        });
+      }
+
+      const users = usersResponse.rows;
+      
+      return res.status(200).json({
+        status: 'success',
+        data: {
+          message: 'Users fetched successfully',
+          usersCount: users.length,
+          users: users,
+        },
+      });
+      
+    } catch (error: unknown) {
+        return res.status(500).json({
+          status: 'error',
+          error: (error as string) || 'Server Error',
+        });
+    }
+  }
+
+  // GET USER BY ID
+
+  async getUserById(req: Request, res: Response): Promise<Response> {
+    try {
+      const userId = req.params.userId;
+
+      const userResponse = await pool.query(fetchUserByIdQuery, [userId]);
+
+      if (!userResponse || !userResponse.rows || userResponse.rows.length === 0) {
+        return res.status(404).json({
+          status: 'error',
+          error: 'User not found',
+        });
+      }
+
+      const { user_id, first_name, last_name, email, gender, job_role, department, address, created_on } = userResponse.rows[0];
+
+      return res.status(200).json({
+        status: 'success',
+        data: {
+          message: 'User fetched successfully',
+          userId: user_id,
+          firstName: first_name,
+          lastName: last_name,
+          email: email,
+          gender: gender,
+          jobRole: job_role,
+          department: department,
+          address: address,
+          createdOn: created_on,
+        },
+      });
+
+    } catch (error: unknown) {
+      return res.status(500).json({
+        status: 'error',
+        error: (error as string) || 'Server Error',
+      });
+      
+    }
+  }
   // Edit User details
 
   async editUserDetails(req: Request, res: Response): Promise<Response> {
@@ -319,6 +397,118 @@ export default class UserControllers {
       });
     } catch (error: unknown) {
       return res.status(500).json({
+        status: 'error',
+        error: (error as string) || 'Server Error',
+      });
+    }
+  }
+
+  async updateUserRole(req: Request, res: Response): Promise<Response> {
+    try {
+      const userId = req.params.userId;
+
+      const user = await pool.query(fetchUserByIdQuery, [userId]);
+
+      if (!user || !user.rows[0] || user.rows.length === 0) {
+        return res.status(404).json({
+          status: 'error',
+          error: 'User not found',
+        });
+      }
+
+      const { job_role, user_id } = user.rows[0];
+
+      if(job_role === 'super_admin') {
+        return res.status(403).json({
+          status: 'error',
+          error: `Cannot change super admin's role`
+        });
+      }
+
+      if (job_role === 'admin') {
+        const updatedUser = await pool.query(removeAdminRoleQuery, [user_id]);
+
+        if(!updatedUser || updatedUser.rows.length === 0) {
+          return res.status(400).json({
+            status: 'error',
+            error: `Failed to update this user's role`
+          });
+        }
+          const { first_name, last_name } = updatedUser.rows[0];
+
+        return res.status(200).json({
+          status: 'success',
+          data: {
+            message: `${first_name} ${last_name}'s role has been updated to employee`,
+          },
+        });
+      } else {
+        const updatedUser = await pool.query(makeUserAdminQuery, [user_id]);
+
+        if(!updatedUser || updatedUser.rows.length === 0) {
+          return res.status(400).json({
+            status: 'error',
+            error: `Failed to update this user's role`
+          });
+        }
+
+        const { first_name, last_name } = updatedUser.rows[0];
+
+        return res.status(200).json({
+          status: 'success',
+          data: {
+            message: `${first_name} ${last_name} has been promoted to admin`,
+          },
+        });
+      }
+      
+    } catch (error: unknown) {
+      return res.status(500).json({
+        status: 'error',
+        error: (error as string) || 'Server Error',
+      });
+    }
+  }
+
+  async deleteUser(req: Request, res: Response): Promise<Response> {
+    try {
+      const userId = req.params.userId;
+
+      const user = await pool.query(fetchUserByIdQuery, [userId]);
+
+      if (!user || !user.rows[0] || user.rows.length === 0) {
+        return res.status(404).json({
+          status: 'error',
+          error: 'User not found',
+        });
+      }
+
+      const { user_id, first_name, last_name, job_role } = user.rows[0];
+
+      if(job_role === 'super_admin') {
+        return res.status(403).json({
+          status: 'error',
+          error: 'Super admin cannot be deleted'
+        });
+      }
+
+      const deleteUser = await pool.query(deleteUserQuery, [user_id]);
+
+      if(!deleteUser || deleteUser.rows.length === 0) {
+        return res.status(400).json({
+          status: 'error',
+          error: 'Failed to delete user',
+        });
+      }
+
+      return res.status(200).json({
+        status: 'success',
+        data: {
+          message: `Successfully deleted ${first_name} ${last_name}`,
+        },
+      });
+    } catch (error: unknown) {
+       return res.status(500).json({
         status: 'error',
         error: (error as string) || 'Server Error',
       });
