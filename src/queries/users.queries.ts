@@ -8,7 +8,13 @@ export const insertUserQuery = `INSERT INTO "users" (first_name, last_name, emai
 
 export const fetchUserByIdQuery = `SELECT * FROM "users" WHERE "user_id" = $1`;
 
-export const getUsersQuery = `SELECT user_id, first_name, last_name, email, gender, job_role, department, address, created_on FROM "users" ORDER BY created_on ASC`;
+export const getUsersCount = `SELECT COUNT(*) AS total_count FROM "users"`;
+
+export const getUsersQuery = `SELECT 
+user_id, first_name, last_name, email, gender, user_img, job_role, department, address, created_on 
+FROM "users" 
+ORDER BY created_on ASC
+LIMIT $1 OFFSET $2`;
 
 export const updateUserQuery = `UPDATE "users" 
 SET 
@@ -25,8 +31,6 @@ export const updatePasswordQuery = `UPDATE "users" SET password = $1 WHERE user_
 export const updateUserImgquery =
   'UPDATE "users" SET user_img = $1 WHERE user_id = $2 RETURNING *';
 
-export const makeUserAdminQuery = `UPDATE "users" SET job_role = 'admin' WHERE user_id = $1 RETURNING *`;
-
-export const removeAdminRoleQuery = `UPDATE "users" SET job_role = 'employee' WHERE user_id = $1 RETURNING *`;
+export const updateUserRoleQuery = `UPDATE "users" SET job_role = $1 WHERE user_id = $2 RETURNING *`;
 
 export const deleteUserQuery = `DELETE FROM "users" WHERE user_id = $1 RETURNING *`;

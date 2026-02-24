@@ -8,6 +8,8 @@ declare global {
       file?: Express.Multer.File;
       params?: {
         userId?: string;
+        page?: string;
+        role?: string;
       };
     }
   }

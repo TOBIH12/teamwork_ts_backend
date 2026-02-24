@@ -27,7 +27,7 @@ router.post(
   validationMiddleware(signInSchemaDTO),
   userControllers.signInUser
 );
-router.get('/getUsers', authMiddleware, userControllers.getUsers);
+router.get('/getUsers/:page', authMiddleware, userControllers.getUsers);
 router.get('/getUserById/:userId', authMiddleware, userControllers.getUserById);
 router.patch(
   '/editUserDetails',
@@ -48,7 +48,7 @@ router.patch(
   userControllers.uploadUserImage
 );
 router.patch(
-  '/admin/updateRole/:userId',
+  '/admin/updateRole/:userId/:role',
   authMiddleware,
   adminAuthentication,
   userControllers.updateUserRole

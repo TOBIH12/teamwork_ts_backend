@@ -12,10 +12,10 @@ import {
   updateUserQuery,
   updatePasswordQuery,
   updateUserImgquery,
-  makeUserAdminQuery,
-  removeAdminRoleQuery,
   deleteUserQuery,
   getUsersQuery,
+  getUsersCount,
+  updateUserRoleQuery,
 } from '../../queries/users.queries';
 import { registerSchema, signInSchema } from '../../zodSchema';
 
@@ -162,18 +162,17 @@ export default class UserControllers {
 
   async getUsers(req: Request, res: Response): Promise<Response> {
     try {
-      const usersResponse = await pool.query(getUsersQuery);
+      const page = parseInt(req.params.page);
+      const limit = 10;
 
-      if (
-        !usersResponse ||
-        !usersResponse.rows ||
-        usersResponse.rows.length === 0
-      ) {
-        return res.status(404).json({
-          status: 'error',
-          error: 'No users found',
-        });
-      }
+      const offset = (page - 1) * limit;
+
+      const usersCountResult = await pool.query(getUsersCount);
+      const totalUsersCount = usersCountResult.rows[0].total_count;
+
+      const pagingValues = [limit, offset];
+
+      const usersResponse = await pool.query(getUsersQuery, pagingValues);
 
       const users = usersResponse.rows;
 
@@ -181,11 +180,12 @@ export default class UserControllers {
         status: 'success',
         data: {
           message: 'Users fetched successfully',
-          usersCount: users.length,
+          usersCount: parseInt(totalUsersCount),
           users,
         },
       });
     } catch (error: unknown) {
+      console.error('Error fetching users:', error);
       return res.status(500).json({
         status: 'error',
         error: (error as string) || 'Server Error',
@@ -231,11 +231,11 @@ export default class UserControllers {
           userId: user_id,
           firstName: first_name,
           lastName: last_name,
-          email: email,
-          gender: gender,
+          email,
+          gender,
           jobRole: job_role,
-          department: department,
-          address: address,
+          department,
+          address,
           createdOn: created_on,
         },
       });
@@ -420,6 +420,7 @@ export default class UserControllers {
   async updateUserRole(req: Request, res: Response): Promise<Response> {
     try {
       const { userId } = req.params;
+      const { role } = req.params;
 
       const user = await pool.query(fetchUserByIdQuery, [userId]);
 
@@ -428,6 +429,11 @@ export default class UserControllers {
           status: 'error',
           error: 'User not found',
         });
+      }
+
+      enum Roles {
+        Admin = 'admin',
+        Employee = 'employee',
       }
 
       const { job_role, user_id } = user.rows[0];
@@ -439,30 +445,29 @@ export default class UserControllers {
         });
       }
 
-      if (job_role === 'admin') {
-        const updatedUser = await pool.query(removeAdminRoleQuery, [user_id]);
-
-        if (!updatedUser || updatedUser.rows.length === 0) {
-          return res.status(400).json({
-            status: 'error',
-            error: `Failed to update this user's role`,
-          });
-        }
-        const { first_name, last_name } = updatedUser.rows[0];
-
-        return res.status(200).json({
-          status: 'success',
-          data: {
-            message: `${first_name} ${last_name}'s role has been updated to employee`,
-          },
+      if (!Object.values(Roles).includes(role as Roles)) {
+        return res.status(400).json({
+          status: 'error',
+          error: 'The requested role does not exist.',
         });
       }
-      const updatedUser = await pool.query(makeUserAdminQuery, [user_id]);
+
+      if (role === job_role) {
+        return res.status(400).json({
+          status: 'error',
+          error: `User is already an ${role}`,
+        });
+      }
+
+      const updatedUser = await pool.query(updateUserRoleQuery, [
+        role,
+        user_id,
+      ]);
 
       if (!updatedUser || updatedUser.rows.length === 0) {
         return res.status(400).json({
           status: 'error',
-          error: `Failed to update this user's role`,
+          error: 'Failed to update user role',
         });
       }
 
@@ -471,7 +476,7 @@ export default class UserControllers {
       return res.status(200).json({
         status: 'success',
         data: {
-          message: `${first_name} ${last_name} has been promoted to admin`,
+          message: `${first_name} ${last_name}'s role has been updated to ${role}`,
         },
       });
     } catch (error: unknown) {

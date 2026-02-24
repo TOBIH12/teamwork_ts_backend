@@ -194,7 +194,7 @@ describe('Get Users Endpoint', () => {
 
   it('should get all users successfully', async () => {
     const res = await request(app)
-      .get('/api/v1/users/getUsers')
+      .get('/api/v1/users/getUsers/1')
       .set('Authorization', `Bearer ${token}`);
     expect(res.status).to.equal(200);
     expect(res.body).to.be.an('object');
@@ -213,7 +213,7 @@ describe('Get Users Endpoint', () => {
   });
 
   it('should return error 401 for unauthorized access', async () => {
-    const res = await request(app).get('/api/v1/users/getUsers');
+    const res = await request(app).get('/api/v1/users/getUsers/1');
     expect(res.status).to.equal(401);
     expect(res.body).to.be.an('object');
     expect(res.body).to.have.property('status', 'error');
@@ -622,19 +622,19 @@ describe('Update User Role Endpoint', () => {
 
   it('should update user role to admin successfully', async () => {
     const res = await request(app)
-      .patch(`/api/v1/users/admin/updateRole/${resUserId1}`)
+      .patch(`/api/v1/users/admin/updateRole/${resUserId1}/admin`)
       .set('Authorization', `Bearer ${token}`);
     expect(res.status).to.equal(200);
     expect(res.body).to.have.property('status', 'success');
     expect(res.body.data).to.have.property(
       'message',
-      `Samuel Ogunleye has been promoted to admin`
+      `Samuel Ogunleye's role has been updated to admin`
     );
   });
 
   it('should update user role to employee successfully', async () => {
     const res = await request(app)
-      .patch(`/api/v1/users/admin/updateRole/${resUserId2}`)
+      .patch(`/api/v1/users/admin/updateRole/${resUserId2}/employee`)
       .set('Authorization', `Bearer ${token}`);
     expect(res.status).to.equal(200);
     expect(res.body).to.have.property('status', 'success');
@@ -644,9 +644,21 @@ describe('Update User Role Endpoint', () => {
     );
   });
 
+  it('should return error 400 for nonexisting user role', async () => {
+    const res = await request(app)
+      .patch(`/api/v1/users/admin/updateRole/${resUserId1}/cleaner`)
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).to.equal(400);
+    expect(res.body).to.have.property('status', 'error');
+    expect(res.body).to.have.property(
+      'error',
+      'The requested role does not exist.'
+    );
+  });
+
   it('should return error 401 for unauthorized role update attempt', async () => {
     const res = await request(app).patch(
-      `/api/v1/users/admin/updateRole/${resUserId1}`
+      `/api/v1/users/admin/updateRole/${resUserId1}/admin`
     );
     expect(res.status).to.equal(401);
     expect(res.body).to.have.property('status', 'error');
