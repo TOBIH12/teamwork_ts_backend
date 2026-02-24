@@ -24,6 +24,11 @@ dotenv.config();
 type RegisterInput = z.infer<typeof registerSchema>;
 type SignInput = z.infer<typeof signInSchema>;
 
+enum Roles {
+  Admin = 'admin',
+  Employee = 'employee',
+}
+
 export default class UserControllers {
   // Create User
 
@@ -429,11 +434,6 @@ export default class UserControllers {
           status: 'error',
           error: 'User not found',
         });
-      }
-
-      enum Roles {
-        Admin = 'admin',
-        Employee = 'employee',
       }
 
       const { job_role, user_id } = user.rows[0];
