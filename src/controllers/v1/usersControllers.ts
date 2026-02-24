@@ -18,20 +18,15 @@ import {
   updateUserRoleQuery,
 } from '../../queries/users.queries';
 import { registerSchema, signInSchema } from '../../zodSchema';
+import { UserRoles } from '../../userInterface';
 
 dotenv.config();
 
 type RegisterInput = z.infer<typeof registerSchema>;
 type SignInput = z.infer<typeof signInSchema>;
 
-enum Roles {
-  Admin = 'admin',
-  Employee = 'employee',
-}
-
 export default class UserControllers {
   // Create User
-
   async createUser(
     req: Request<RegisterInput>,
     res: Response
@@ -104,7 +99,6 @@ export default class UserControllers {
   }
 
   // SIGN IN USER
-
   async signInUser(req: Request<SignInput>, res: Response): Promise<Response> {
     try {
       const { email, password } = req.body;
@@ -164,7 +158,6 @@ export default class UserControllers {
   }
 
   // Get Users
-
   async getUsers(req: Request, res: Response): Promise<Response> {
     try {
       const page = parseInt(req.params.page);
@@ -175,9 +168,7 @@ export default class UserControllers {
       const usersCountResult = await pool.query(getUsersCount);
       const totalUsersCount = usersCountResult.rows[0].total_count;
 
-      const pagingValues = [limit, offset];
-
-      const usersResponse = await pool.query(getUsersQuery, pagingValues);
+      const usersResponse = await pool.query(getUsersQuery, [limit, offset]);
 
       const users = usersResponse.rows;
 
@@ -199,7 +190,6 @@ export default class UserControllers {
   }
 
   // GET USER BY ID
-
   async getUserById(req: Request, res: Response): Promise<Response> {
     try {
       const { userId } = req.params;
@@ -251,8 +241,8 @@ export default class UserControllers {
       });
     }
   }
-  // Edit User details
 
+  // Edit User details
   async editUserDetails(req: Request, res: Response): Promise<Response> {
     try {
       const reqUserId = req.user?.user_id;
@@ -302,7 +292,6 @@ export default class UserControllers {
   }
 
   // Change Password
-
   async changePassword(req: Request, res: Response): Promise<Response> {
     try {
       const reqUserId = req.user?.user_id;
@@ -367,7 +356,6 @@ export default class UserControllers {
   }
 
   // Edit User Image
-
   async uploadUserImage(req: Request, res: Response): Promise<Response> {
     try {
       const reqUserId = req.user?.user_id;
@@ -422,6 +410,7 @@ export default class UserControllers {
     }
   }
 
+  // Update User Role
   async updateUserRole(req: Request, res: Response): Promise<Response> {
     try {
       const { userId } = req.params;
@@ -445,7 +434,7 @@ export default class UserControllers {
         });
       }
 
-      if (!Object.values(Roles).includes(role as Roles)) {
+      if (!Object.values(UserRoles).includes(role as UserRoles)) {
         return res.status(400).json({
           status: 'error',
           error: 'The requested role does not exist.',
@@ -487,6 +476,7 @@ export default class UserControllers {
     }
   }
 
+  // Delete User
   async deleteUser(req: Request, res: Response): Promise<Response> {
     try {
       const { userId } = req.params;

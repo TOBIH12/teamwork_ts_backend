@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { UserRoles } from '../userInterface';
 
 const adminAuthentication = (
   req: Request,
@@ -21,7 +22,7 @@ const adminAuthentication = (
   }
 
   if (
-    role.trim().toLowerCase() !== 'admin' &&
+    role.trim().toLowerCase() !== UserRoles.Admin &&
     role.trim().toLowerCase() !== 'super_admin'
   ) {
     return res.status(403).json({

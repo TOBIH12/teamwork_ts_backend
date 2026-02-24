@@ -1,4 +1,4 @@
-type UserInfo = {
+export type UserInfo = {
   user_id: number;
   first_name: string;
   last_name: string;
@@ -10,4 +10,7 @@ type UserInfo = {
   address: string;
 };
 
-export default UserInfo;
+export enum UserRoles  {
+  Admin = 'admin',
+  Employee = 'employee',
+};

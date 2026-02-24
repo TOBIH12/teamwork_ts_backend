@@ -47,8 +47,6 @@ export default class PostsControllers {
 
       const { gif_id, created_on } = newGifPost.rows[0];
 
-      // Increment user's GIF count
-
       return res.status(201).json({
         status: 'success',
         data: {

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { UserRoles } from './userInterface';
 
 // ------------- USER SCHEMAS -----------------
 
@@ -10,8 +11,8 @@ export const registerSchema = z.object({
   password: z.string().min(6, 'Password must be at least 6 characters long'),
   gender: z.enum(['male', 'female'], 'Gender must be either male or female'),
   jobRole: z.enum(
-    ['admin', 'employee'],
-    'Job role must be either admin or employee'
+    [UserRoles.Admin, UserRoles.Employee],
+    'The requested job role is invalid'
   ),
   department: z.string().min(1, 'Department is required'),
   address: z.string().min(1, 'Address is required'),
