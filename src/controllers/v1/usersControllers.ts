@@ -181,7 +181,6 @@ export default class UserControllers {
         },
       });
     } catch (error: unknown) {
-      console.error('Error fetching users:', error);
       return res.status(500).json({
         status: 'error',
         error: (error as string) || 'Server Error',
@@ -427,7 +426,7 @@ export default class UserControllers {
 
       const { job_role, user_id } = user.rows[0];
 
-      if (job_role === 'super_admin') {
+      if (job_role === UserRoles.SuperAdmin) {
         return res.status(403).json({
           status: 'error',
           error: `Cannot change super admin's role`,
@@ -492,7 +491,7 @@ export default class UserControllers {
 
       const { user_id, first_name, last_name, job_role } = user.rows[0];
 
-      if (job_role === 'super_admin') {
+      if (job_role === UserRoles.SuperAdmin) {
         return res.status(403).json({
           status: 'error',
           error: 'Super admin cannot be deleted',

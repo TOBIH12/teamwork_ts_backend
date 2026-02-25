@@ -11,6 +11,7 @@ export type UserInfo = {
 };
 
 export enum UserRoles  {
+  SuperAdmin = 'super_admin',
   Admin = 'admin',
   Employee = 'employee',
 };

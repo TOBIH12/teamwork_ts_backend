@@ -23,7 +23,7 @@ const adminAuthentication = (
 
   if (
     role.trim().toLowerCase() !== UserRoles.Admin &&
-    role.trim().toLowerCase() !== 'super_admin'
+    role.trim().toLowerCase() !== UserRoles.SuperAdmin
   ) {
     return res.status(403).json({
       status: 'error',
