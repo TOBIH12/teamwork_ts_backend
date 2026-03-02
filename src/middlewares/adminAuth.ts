@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { UserRoles } from '../userInterface';
 
 const adminAuthentication = (
   req: Request,
@@ -20,7 +21,10 @@ const adminAuthentication = (
     });
   }
 
-  if (role.trim().toLowerCase() !== 'admin') {
+  if (
+    role.trim().toLowerCase() !== UserRoles.Admin &&
+    role.trim().toLowerCase() !== UserRoles.SuperAdmin
+  ) {
     return res.status(403).json({
       status: 'error',
       error: 'Forbidden.',

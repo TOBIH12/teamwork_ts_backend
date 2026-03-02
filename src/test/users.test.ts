@@ -150,6 +150,154 @@ describe('Sign In User Endpoint', () => {
   });
 });
 
+describe('Get Users Endpoint', () => {
+  let token = '';
+
+  before(async () => {
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash('password123', salt);
+
+    await pool.query(
+      'INSERT into "users" (first_name, last_name, email, password, gender, job_role, department, address) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+      [
+        'Dave',
+        'Ogunleye',
+        'dave@gmail.com',
+        hashedPassword,
+        'male',
+        'admin',
+        'accounting',
+        '123 Main St',
+      ]
+    );
+
+    await pool.query(
+      'INSERT into "users" (first_name, last_name, email, password, gender, job_role, department, address) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+      [
+        'Samuel',
+        'Ogunleye',
+        'samuel@gmail.com',
+        hashedPassword,
+        'male',
+        'employee',
+        'accounting',
+        '123 Main St',
+      ]
+    );
+
+    const res = await request(app).post('/api/v1/users/signin').send({
+      email: 'dave@gmail.com',
+      password: 'password123',
+    });
+    token = res.body.data.token || res.body.token;
+  });
+
+  it('should get all users successfully', async () => {
+    const res = await request(app)
+      .get('/api/v1/users/getUsers/1')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).to.equal(200);
+    expect(res.body).to.be.an('object');
+    expect(res.body).to.have.property('status', 'success');
+    expect(res.body.data).to.have.property(
+      'message',
+      'Users fetched successfully'
+    );
+    expect(res.body.data).to.have.property('usersCount', 2);
+    expect(res.body.data.users).to.be.an('array');
+    expect(res.body.data.users[0]).to.have.property('email', 'dave@gmail.com');
+    expect(res.body.data.users[1]).to.have.property(
+      'email',
+      'samuel@gmail.com'
+    );
+  });
+
+  it('should return error 401 for unauthorized access', async () => {
+    const res = await request(app).get('/api/v1/users/getUsers/1');
+    expect(res.status).to.equal(401);
+    expect(res.body).to.be.an('object');
+    expect(res.body).to.have.property('status', 'error');
+    expect(res.body).to.have.property(
+      'error',
+      `Authorization token is missing`
+    );
+  });
+
+  after(async () => {
+    await pool.query('TRUNCATE TABLE users RESTART IDENTITY CASCADE');
+  });
+});
+
+describe('Get User By Id Endpoint', () => {
+  let token = '';
+  let userId = '';
+
+  before(async () => {
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash('password123', salt);
+
+    await pool.query(
+      'INSERT into "users" (first_name, last_name, email, password, gender, job_role, department, address) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+      [
+        'Dave',
+        'Ogunleye',
+        'dave@gmail.com',
+        hashedPassword,
+        'male',
+        'admin',
+        'accounting',
+        '123 Main St',
+      ]
+    );
+
+    const res = await request(app).post('/api/v1/users/signin').send({
+      email: 'dave@gmail.com',
+      password: 'password123',
+    });
+    token = res.body.data.token || res.body.token;
+    userId = res.body.data.userId || res.body.userId;
+  });
+
+  it('should get user by id successfully', async () => {
+    const res = await request(app)
+      .get(`/api/v1/users/getUserById/${userId}`)
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).to.equal(200);
+    expect(res.body).to.be.an('object');
+    expect(res.body).to.have.property('status', 'success');
+    expect(res.body.data).to.have.property(
+      'message',
+      'User fetched successfully'
+    );
+    expect(res.body.data).to.have.property('email', 'dave@gmail.com');
+  });
+
+  it('should return error 401 for unauthorized access', async () => {
+    const res = await request(app).get(`/api/v1/users/getUserById/${userId}`);
+    expect(res.status).to.equal(401);
+    expect(res.body).to.be.an('object');
+    expect(res.body).to.have.property('status', 'error');
+    expect(res.body).to.have.property(
+      'error',
+      `Authorization token is missing`
+    );
+  });
+
+  it('should return error 404 for non existing user id', async () => {
+    const res = await request(app)
+      .get(`/api/v1/users/getUserById/9999`)
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).to.equal(404);
+    expect(res.body).to.be.an('object');
+    expect(res.body).to.have.property('status', 'error');
+    expect(res.body).to.have.property('error', 'User not found');
+  });
+
+  after(async () => {
+    await pool.query('TRUNCATE TABLE users RESTART IDENTITY CASCADE');
+  });
+});
+
 describe('Edit User Details Endpoint', () => {
   let token = '';
   let userId = '';
@@ -204,7 +352,7 @@ describe('Edit User Details Endpoint', () => {
   });
 
   it('should update sucessfully with misssing fields', async () => {
-       const res = await request(app)
+    const res = await request(app)
       .patch(`/api/v1/users/editUserDetails`)
       .set('Authorization', `Bearer ${token}`)
       .send({
@@ -401,6 +549,199 @@ describe('Upload user image endpoint', () => {
     expect(res.status).to.equal(400);
     expect(res.body).to.have.property('status', 'error');
     expect(res.body).to.have.property('error', 'No image file uploaded');
+  });
+
+  after(async () => {
+    await pool.query('TRUNCATE TABLE users RESTART IDENTITY CASCADE');
+  });
+});
+
+describe('Update User Role Endpoint', () => {
+  let token = '';
+  let reqUserId = '';
+  let resUserId1 = '';
+  let resUserId2 = '';
+
+  before(async () => {
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash('password123', salt);
+
+    await pool.query(
+      'INSERT into "users" (first_name, last_name, email, password, gender, job_role, department, address) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+      [
+        'Dave',
+        'Ogunleye',
+        'dave@gmail.com',
+        hashedPassword,
+        'male',
+        'admin',
+        'accounting',
+        '123 Main St',
+      ]
+    );
+
+    const resUser1 = await pool.query(
+      'INSERT into "users" (first_name, last_name, email, password, gender, job_role, department, address) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+      [
+        'Samuel',
+        'Ogunleye',
+        'samuel@gmail.com',
+        hashedPassword,
+        'male',
+        'employee',
+        'accounting',
+        '123 Main St',
+      ]
+    );
+
+    resUserId1 = resUser1.rows[0].user_id;
+
+    const resUser2 = await pool.query(
+      'INSERT into "users" (first_name, last_name, email, password, gender, job_role, department, address) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+      [
+        'Elizabeth',
+        'Ogunleye',
+        'elizabeth@gmail.com',
+        hashedPassword,
+        'female',
+        'admin',
+        'accounting',
+        '123 Main St',
+      ]
+    );
+
+    resUserId2 = resUser2.rows[0].user_id;
+
+    const res = await request(app).post('/api/v1/users/signin').send({
+      email: 'dave@gmail.com',
+      password: 'password123',
+    });
+    token = res.body.data.token || res.body.token;
+    reqUserId = res.body.data.userId || res.body.userId;
+  });
+
+  it('should update user role to admin successfully', async () => {
+    const res = await request(app)
+      .patch(`/api/v1/users/admin/updateRole/${resUserId1}/admin`)
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).to.equal(200);
+    expect(res.body).to.have.property('status', 'success');
+    expect(res.body.data).to.have.property(
+      'message',
+      `Samuel Ogunleye's role has been updated to admin`
+    );
+  });
+
+  it('should update user role to employee successfully', async () => {
+    const res = await request(app)
+      .patch(`/api/v1/users/admin/updateRole/${resUserId2}/employee`)
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).to.equal(200);
+    expect(res.body).to.have.property('status', 'success');
+    expect(res.body.data).to.have.property(
+      'message',
+      `Elizabeth Ogunleye's role has been updated to employee`
+    );
+  });
+
+  it('should return error 400 for nonexisting user role', async () => {
+    const res = await request(app)
+      .patch(`/api/v1/users/admin/updateRole/${resUserId1}/cleaner`)
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).to.equal(400);
+    expect(res.body).to.have.property('status', 'error');
+    expect(res.body).to.have.property(
+      'error',
+      'The requested role does not exist.'
+    );
+  });
+
+  it('should return error 401 for unauthorized role update attempt', async () => {
+    const res = await request(app).patch(
+      `/api/v1/users/admin/updateRole/${resUserId1}/admin`
+    );
+    expect(res.status).to.equal(401);
+    expect(res.body).to.have.property('status', 'error');
+    expect(res.body).to.have.property(
+      'error',
+      `Authorization token is missing`
+    );
+  });
+
+  after(async () => {
+    await pool.query('TRUNCATE TABLE users RESTART IDENTITY CASCADE');
+  });
+});
+
+describe('Delete User Endpoint', () => {
+  let token = '';
+  let reqUserId = '';
+  let resUserId = '';
+
+  before(async () => {
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash('password123', salt);
+
+    await pool.query(
+      'INSERT into "users" (first_name, last_name, email, password, gender, job_role, department, address) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+      [
+        'Dave',
+        'Ogunleye',
+        'dave@gmail.com',
+        hashedPassword,
+        'male',
+        'admin',
+        'accounting',
+        '123 Main St',
+      ]
+    );
+
+    const resUser = await pool.query(
+      'INSERT into "users" (first_name, last_name, email, password, gender, job_role, department, address) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+      [
+        'Samuel',
+        'Ogunleye',
+        'samuel@gmail.com',
+        hashedPassword,
+        'male',
+        'employee',
+        'accounting',
+        '123 Main St',
+      ]
+    );
+
+    resUserId = resUser.rows[0].user_id;
+
+    const res = await request(app).post('/api/v1/users/signin').send({
+      email: 'dave@gmail.com',
+      password: 'password123',
+    });
+    token = res.body.data.token || res.body.token;
+    reqUserId = res.body.data.userId || res.body.userId;
+  });
+
+  it('should delete user successfully', async () => {
+    const res = await request(app)
+      .delete(`/api/v1/users/admin/deleteUser/${resUserId}`)
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).to.equal(200);
+    expect(res.body).to.have.property('status', 'success');
+    expect(res.body.data).to.have.property(
+      'message',
+      `Successfully deleted Samuel Ogunleye`
+    );
+  });
+
+  it('should return error 401 for unauthorized delete attempt', async () => {
+    const res = await request(app).delete(
+      `/api/v1/users/admin/deleteUser/${resUserId}`
+    );
+    expect(res.status).to.equal(401);
+    expect(res.body).to.have.property('status', 'error');
+    expect(res.body).to.have.property(
+      'error',
+      `Authorization token is missing`
+    );
   });
 
   after(async () => {

@@ -12,8 +12,13 @@ import {
   updateUserQuery,
   updatePasswordQuery,
   updateUserImgquery,
+  deleteUserQuery,
+  getUsersQuery,
+  getUsersCount,
+  updateUserRoleQuery,
 } from '../../queries/users.queries';
 import { registerSchema, signInSchema } from '../../zodSchema';
+import { UserRoles } from '../../userInterface';
 
 dotenv.config();
 
@@ -22,7 +27,6 @@ type SignInput = z.infer<typeof signInSchema>;
 
 export default class UserControllers {
   // Create User
-
   async createUser(
     req: Request<RegisterInput>,
     res: Response
@@ -95,7 +99,6 @@ export default class UserControllers {
   }
 
   // SIGN IN USER
-
   async signInUser(req: Request<SignInput>, res: Response): Promise<Response> {
     try {
       const { email, password } = req.body;
@@ -154,8 +157,91 @@ export default class UserControllers {
     }
   }
 
-  // Edit User details
+  // Get Users
+  async getUsers(req: Request, res: Response): Promise<Response> {
+    try {
+      const page = parseInt(req.params.page);
+      const limit = 10;
 
+      const offset = (page - 1) * limit;
+
+      const usersCountResult = await pool.query(getUsersCount);
+      const totalUsersCount = usersCountResult.rows[0].total_count;
+
+      const usersResponse = await pool.query(getUsersQuery, [limit, offset]);
+
+      const users = usersResponse.rows;
+
+      return res.status(200).json({
+        status: 'success',
+        data: {
+          message: 'Users fetched successfully',
+          usersCount: parseInt(totalUsersCount),
+          users,
+        },
+      });
+    } catch (error: unknown) {
+      return res.status(500).json({
+        status: 'error',
+        error: (error as string) || 'Server Error',
+      });
+    }
+  }
+
+  // GET USER BY ID
+  async getUserById(req: Request, res: Response): Promise<Response> {
+    try {
+      const { userId } = req.params;
+
+      const userResponse = await pool.query(fetchUserByIdQuery, [userId]);
+
+      if (
+        !userResponse ||
+        !userResponse.rows ||
+        userResponse.rows.length === 0
+      ) {
+        return res.status(404).json({
+          status: 'error',
+          error: 'User not found',
+        });
+      }
+
+      const {
+        user_id,
+        first_name,
+        last_name,
+        email,
+        gender,
+        job_role,
+        department,
+        address,
+        created_on,
+      } = userResponse.rows[0];
+
+      return res.status(200).json({
+        status: 'success',
+        data: {
+          message: 'User fetched successfully',
+          userId: user_id,
+          firstName: first_name,
+          lastName: last_name,
+          email,
+          gender,
+          jobRole: job_role,
+          department,
+          address,
+          createdOn: created_on,
+        },
+      });
+    } catch (error: unknown) {
+      return res.status(500).json({
+        status: 'error',
+        error: (error as string) || 'Server Error',
+      });
+    }
+  }
+
+  // Edit User details
   async editUserDetails(req: Request, res: Response): Promise<Response> {
     try {
       const reqUserId = req.user?.user_id;
@@ -205,7 +291,6 @@ export default class UserControllers {
   }
 
   // Change Password
-
   async changePassword(req: Request, res: Response): Promise<Response> {
     try {
       const reqUserId = req.user?.user_id;
@@ -270,7 +355,6 @@ export default class UserControllers {
   }
 
   // Edit User Image
-
   async uploadUserImage(req: Request, res: Response): Promise<Response> {
     try {
       const reqUserId = req.user?.user_id;
@@ -315,6 +399,118 @@ export default class UserControllers {
           message: 'User image updated successfully',
           userId: reqUserId,
           userImgUrl: userImgUrl.secure_url,
+        },
+      });
+    } catch (error: unknown) {
+      return res.status(500).json({
+        status: 'error',
+        error: (error as string) || 'Server Error',
+      });
+    }
+  }
+
+  // Update User Role
+  async updateUserRole(req: Request, res: Response): Promise<Response> {
+    try {
+      const { userId } = req.params;
+      const { role } = req.params;
+
+      const user = await pool.query(fetchUserByIdQuery, [userId]);
+
+      if (!user || !user.rows[0] || user.rows.length === 0) {
+        return res.status(404).json({
+          status: 'error',
+          error: 'User not found',
+        });
+      }
+
+      const { job_role, user_id } = user.rows[0];
+
+      if (job_role === UserRoles.SuperAdmin) {
+        return res.status(403).json({
+          status: 'error',
+          error: `Cannot change super admin's role`,
+        });
+      }
+
+      if (!Object.values(UserRoles).includes(role as UserRoles)) {
+        return res.status(400).json({
+          status: 'error',
+          error: 'The requested role does not exist.',
+        });
+      }
+
+      if (role === job_role) {
+        return res.status(400).json({
+          status: 'error',
+          error: `User is already an ${role}`,
+        });
+      }
+
+      const updatedUser = await pool.query(updateUserRoleQuery, [
+        role,
+        user_id,
+      ]);
+
+      if (!updatedUser || updatedUser.rows.length === 0) {
+        return res.status(400).json({
+          status: 'error',
+          error: 'Failed to update user role',
+        });
+      }
+
+      const { first_name, last_name } = updatedUser.rows[0];
+
+      return res.status(200).json({
+        status: 'success',
+        data: {
+          message: `${first_name} ${last_name}'s role has been updated to ${role}`,
+        },
+      });
+    } catch (error: unknown) {
+      return res.status(500).json({
+        status: 'error',
+        error: (error as string) || 'Server Error',
+      });
+    }
+  }
+
+  // Delete User
+  async deleteUser(req: Request, res: Response): Promise<Response> {
+    try {
+      const { userId } = req.params;
+
+      const user = await pool.query(fetchUserByIdQuery, [userId]);
+
+      if (!user || !user.rows[0] || user.rows.length === 0) {
+        return res.status(404).json({
+          status: 'error',
+          error: 'User not found',
+        });
+      }
+
+      const { user_id, first_name, last_name, job_role } = user.rows[0];
+
+      if (job_role === UserRoles.SuperAdmin) {
+        return res.status(403).json({
+          status: 'error',
+          error: 'Super admin cannot be deleted',
+        });
+      }
+
+      const deleteUser = await pool.query(deleteUserQuery, [user_id]);
+
+      if (!deleteUser || deleteUser.rows.length === 0) {
+        return res.status(400).json({
+          status: 'error',
+          error: 'Failed to delete user',
+        });
+      }
+
+      return res.status(200).json({
+        status: 'success',
+        data: {
+          message: `Successfully deleted ${first_name} ${last_name}`,
         },
       });
     } catch (error: unknown) {

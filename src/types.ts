@@ -1,5 +1,5 @@
 import multer from 'multer';
-import UserInfo from './userInterface';
+import { UserInfo } from './userInterface';
 
 declare global {
   namespace Express {
@@ -8,6 +8,8 @@ declare global {
       file?: Express.Multer.File;
       params?: {
         userId?: string;
+        page?: string;
+        role?: string;
       };
     }
   }
