@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { UserRoles } from '../userInterface';
+import { UserRoles } from '../utils/userInterface';
 
 const adminAuthentication = (
   req: Request,

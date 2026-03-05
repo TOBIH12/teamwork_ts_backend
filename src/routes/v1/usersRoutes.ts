@@ -7,6 +7,8 @@ import {
   signInSchemaDTO,
   editUserSchemaDTO,
   changePasswordSchemaDTO,
+  forgotPasswordSchemaDTO,
+  resetPasswordSchemaDTO,
 } from '../../zodSchema';
 import adminAuthentication from '../../middlewares/adminAuth';
 import { uploadedUserImage } from '../../middlewares/multerMiddleware';
@@ -26,6 +28,16 @@ router.post(
   '/signin',
   validationMiddleware(signInSchemaDTO),
   userControllers.signInUser
+);
+router.patch(
+  '/forgotPassword',
+  validationMiddleware(forgotPasswordSchemaDTO),
+  userControllers.forgotPassword
+);
+router.patch(
+  '/resetPassword/:userId/:token',
+  validationMiddleware(resetPasswordSchemaDTO),
+  userControllers.resetPassword
 );
 router.get('/getUsers/:page', authMiddleware, userControllers.getUsers);
 router.get('/getUserById/:userId', authMiddleware, userControllers.getUserById);

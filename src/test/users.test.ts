@@ -150,6 +150,148 @@ describe('Sign In User Endpoint', () => {
   });
 });
 
+describe('Forgot Password Endpoint', () => {
+  before(async () => {
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash('password123', salt);
+
+    await pool.query(
+      'INSERT into "users" (first_name, last_name, email, password, gender, job_role, department, address) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+      [
+        'Dave',
+        'Ogunleye',
+        'ayomikunbolaji43@gmail.com',
+        hashedPassword,
+        'male',
+        'employee',
+        'accounting',
+        '123 Main St',
+      ]
+    );
+  });
+
+  it('Should successfully send reset link to users email', async () => {
+    const res = await request(app).patch('/api/v1/users/forgotPassword').send({
+      email: 'ayomikunbolaji43@gmail.com',
+    });
+    expect(res.status).to.equal(200);
+    expect(res.body).to.be.an('object');
+    expect(res.body).to.have.property('status', 'success');
+    expect(res.body.data).to.have.property(
+      'message',
+      'A password reset link has been sent to your email address'
+    );
+  });
+
+  it('Should fail to send reset link to wrong email', async () => {
+    const res = await request(app).patch('/api/v1/users/forgotPassword').send({
+      email: 'ayomikunbolaji4@gmail.com',
+    });
+    expect(res.status).to.equal(400);
+    expect(res.body).to.be.an('object');
+    expect(res.body).to.have.property('status', 'error');
+    expect(res.body).to.have.property('error', 'Email does not exist');
+  });
+
+  after(async () => {
+    await pool.query('TRUNCATE TABLE users RESTART IDENTITY CASCADE');
+  });
+});
+
+describe('Reset password endpoint', () => {
+  let token = '';
+
+  before(async () => {
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash('password123', salt);
+
+    await pool.query(
+      'INSERT into "users" (first_name, last_name, email, password, gender, job_role, department, address) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+      [
+        'Dave',
+        'Ogunleye',
+        'ayomikunbolaji43@gmail.com',
+        hashedPassword,
+        'male',
+        'employee',
+        'accounting',
+        '123 Main St',
+      ]
+    );
+
+    const res = await request(app).patch('/api/v1/users/forgotPassword').send({
+      email: 'ayomikunbolaji43@gmail.com',
+    });
+
+    token = res.body.data.token;
+  });
+
+  it('should successfully update user password', async () => {
+    const res = await request(app)
+      .patch(`/api/v1/users/resetPassword/1/${token}`)
+      .send({
+        newPassword: 'Ayamakara.12',
+        confirmNewPassword: 'Ayamakara.12',
+      });
+    expect(res.status).to.equal(200);
+    expect(res.body).to.be.an('object');
+    expect(res.body).to.have.property('status', 'success');
+    expect(res.body.data).to.have.property(
+      'message',
+      'Password successfully updated. Return to login page to continue.'
+    );
+  });
+
+  it('should return 400 for nonexisting user', async () => {
+    const res = await request(app)
+      .patch(`/api/v1/users/resetPassword/2/${token}`)
+      .send({
+        newPassword: 'Ayamakara.12',
+        confirmNewPassword: 'Ayamakara.12',
+      });
+    expect(res.status).to.equal(400);
+    expect(res.body).to.be.an('object');
+    expect(res.body).to.have.property('status', 'error');
+    expect(res.body).to.have.property(
+      'error',
+      'Some problem occured with finding user.'
+    );
+  });
+
+  it('should return 400 for invalid reset token', async () => {
+    const res = await request(app)
+      .patch(`/api/v1/users/resetPassword/1/${`${token}7`}`)
+      .send({
+        newPassword: 'Ayamakara.12',
+        confirmNewPassword: 'Ayamakara.12',
+      });
+    expect(res.status).to.equal(400);
+    expect(res.body).to.be.an('object');
+    expect(res.body).to.have.property('status', 'error');
+    expect(res.body).to.have.property('error', 'Invalid reset token');
+  });
+
+  it('should return 400 for unmatching passwords', async () => {
+    const res = await request(app)
+      .patch(`/api/v1/users/resetPassword/1/${token}`)
+      .send({
+        newPassword: 'Ayamakara.12',
+        confirmNewPassword: 'Ayamakara',
+      });
+    expect(res.status).to.equal(400);
+    expect(res.body).to.be.an('object');
+    expect(res.body).to.have.property('status', 'error');
+    expect(res.body).to.have.property(
+      'error',
+      'The new password and confirm password do not match.'
+    );
+  });
+
+  after(async () => {
+    await pool.query('TRUNCATE TABLE users RESTART IDENTITY CASCADE');
+  });
+});
+
 describe('Get Users Endpoint', () => {
   let token = '';
 

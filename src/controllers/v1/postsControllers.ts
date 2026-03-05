@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 import z from 'zod';
 import pool from '../../db';
 import { postGifSchema } from '../../zodSchema';
-import cloudinaryConfig from '../../cloudinaryConfig';
+import cloudinaryConfig from '../../utils/cloudinaryConfig';
 import { insertGifPostQuery } from '../../queries/posts.queries';
 
 dotenv.config();

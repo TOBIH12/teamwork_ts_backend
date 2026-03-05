@@ -1,10 +1,11 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 import z from 'zod';
 import pool from '../../db';
-import cloudinaryConfig from '../../cloudinaryConfig';
+import cloudinaryConfig from '../../utils/cloudinaryConfig';
 import {
   checkEmailQuery,
   fetchUserByIdQuery,
@@ -16,9 +17,11 @@ import {
   getUsersQuery,
   getUsersCount,
   updateUserRoleQuery,
+  saveResetTokenQuery,
 } from '../../queries/users.queries';
 import { registerSchema, signInSchema } from '../../zodSchema';
-import { UserRoles } from '../../userInterface';
+import { UserRoles } from '../../utils/userInterface';
+import { sendEmail, emailTemplate } from '../../utils/email';
 
 dotenv.config();
 
@@ -147,6 +150,156 @@ export default class UserControllers {
           firstName: first_name,
           lastName: last_name,
           jobRole: job_role,
+        },
+      });
+    } catch (error: unknown) {
+      return res.status(500).json({
+        status: 'error',
+        error: (error as string) || 'Server Error',
+      });
+    }
+  }
+
+  // Forgot Password
+  async forgotPassword(req: Request, res: Response): Promise<Response> {
+    try {
+      const { email } = req.body;
+      const userEmail = email.toLowerCase();
+
+      const userResponse = await pool.query(checkEmailQuery, [userEmail]);
+
+      if (!userResponse.rows || userResponse.rows.length === 0) {
+        return res.status(400).json({
+          status: 'error',
+          error: 'Email does not exist',
+        });
+      }
+
+      const { user_id } = userResponse.rows[0];
+
+      const token = crypto.randomBytes(20).toString('hex');
+      const dbResetToken = crypto
+        .createHash('sha256')
+        .update(token)
+        .digest('hex');
+
+      const resetTimeInMilliseconds = Date.now() + 300000;
+      const validDbTime = new Date(resetTimeInMilliseconds).toISOString();
+
+      const updateDBToken = await pool.query(saveResetTokenQuery, [
+        dbResetToken,
+        validDbTime,
+        userEmail,
+      ]);
+
+      if (!updateDBToken.rows || updateDBToken.rows.length === 0) {
+        return res.status(400).json({
+          status: 'error',
+          error: 'could not update database token',
+        });
+      }
+
+      const resetUrl = `${req.protocol}://${req.get('host')}/api/v1/users/resetPassword/${user_id}/${token}`;
+
+      const emailOptions = {
+        to: userEmail,
+        subject: 'Password Reset Request',
+        html: emailTemplate({
+          content: `You requested a password reset. Click the button below to reset your password. This link will expire in 5 minutes.`,
+          buttonUrl: resetUrl,
+          buttonText: 'Reset Password',
+        }),
+      };
+
+      await sendEmail(emailOptions).catch((err) => {
+        pool.query(saveResetTokenQuery, ['-1', validDbTime, user_id]);
+        throw new Error(`Error sending email. Please try again later: ${err}`);
+      });
+
+      return res.status(200).json({
+        status: 'success',
+        data: {
+          message: 'A password reset link has been sent to your email address',
+          token,
+        },
+      });
+    } catch (error: unknown) {
+      return res.status(500).json({
+        status: 'error',
+        error: (error as string) || 'Server Error',
+      });
+    }
+  }
+
+  // Reset Password
+  async resetPassword(req: Request, res: Response): Promise<Response> {
+    try {
+      const { newPassword, confirmNewPassword } = req.body;
+      const { userId, token } = req.params;
+
+      const hashedToken = crypto
+        .createHash('sha256')
+        .update(token)
+        .digest('hex');
+
+      const dbTokenUserLookUp = await pool.query(fetchUserByIdQuery, [userId]);
+
+      if (!dbTokenUserLookUp.rows || dbTokenUserLookUp.rows.length === 0) {
+        return res.status(400).json({
+          status: 'error',
+          error: `Some problem occured with finding user.`,
+        });
+      }
+
+      const { user_id, reset_password_token, reset_password_token_expires } =
+        dbTokenUserLookUp.rows[0];
+
+      const currentTimeInMilliseconds = Date.now();
+      const dbFormatCurrentTime = new Date(
+        currentTimeInMilliseconds
+      ).toISOString();
+
+      if (reset_password_token_expires > dbFormatCurrentTime) {
+        return res.status(403).json({
+          status: 'error',
+          error: 'Sorry, This reset password link has expired.',
+        });
+      }
+
+      if (reset_password_token !== hashedToken) {
+        return res.status(400).json({
+          status: 'error',
+          error: 'Invalid reset token',
+        });
+      }
+
+      if (newPassword !== confirmNewPassword) {
+        return res.status(400).json({
+          status: 'error',
+          error: 'The new password and confirm password do not match.',
+        });
+      }
+
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+      const updatedNewPassword = await pool.query(updatePasswordQuery, [
+        hashedPassword,
+        user_id,
+      ]);
+
+      if (!updatedNewPassword) {
+        return res.status(400).json({
+          status: 'error',
+          error: 'Could not update password. please try again later.',
+        });
+      }
+
+      return res.status(200).json({
+        status: 'success',
+        data: {
+          message:
+            'Password successfully updated. Return to login page to continue.',
         },
       });
     } catch (error: unknown) {

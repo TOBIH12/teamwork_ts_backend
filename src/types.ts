@@ -1,5 +1,5 @@
 import multer from 'multer';
-import { UserInfo } from './userInterface';
+import { UserInfo } from './utils/userInterface';
 
 declare global {
   namespace Express {

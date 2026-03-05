@@ -16,7 +16,7 @@
     "types": ["node", "mocha", "chai"],
     "typeRoots": ["./node_modules/@types", "./src/types"]
   },
-   "include": ["src/**/*.ts", "src/test/**/*.ts"],
+   "include": ["src/**/*.ts", "src/test/**/*.ts", "src/utils/userInterface.ts", "src/utils/cloudinaryConfig.ts"],
    "ts-node": {
      "files": true
    },
