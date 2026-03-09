@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { UserRoles } from './userInterface';
+import { UserRoles } from './utils/userInterface';
 
 // ------------- USER SCHEMAS -----------------
 
@@ -23,7 +23,6 @@ export const registrationSchemaDTO = z.object({
 });
 
 // User Signin schema validation
-
 export const signInSchema = z.object({
   email: z.email('Invalid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters long'),
@@ -33,8 +32,32 @@ export const signInSchemaDTO = z.object({
   body: signInSchema,
 });
 
-// Edit User schema validation
+// Forgot Password schema validation
+export const forgotPasswordSchema = z.object({
+  email: z.email('Invalid email address'),
+});
 
+export const forgotPasswordSchemaDTO = z.object({
+  body: forgotPasswordSchema,
+});
+
+// Reset Password schema validation
+export const resetPasswordSchema = z.object({
+  newPassword: z
+    .string()
+    .min(6, 'New password must be at least 6 characters long'),
+  confirmNewPassword: z.string().min(6, 'Please confirm your new password'),
+});
+
+export const resetPasswordSchemaDTO = z.object({
+  body: resetPasswordSchema,
+  params: z.object({
+    userId: z.string().min(1, 'User id is required'),
+    token: z.string().min(1, 'Reset token is required'),
+  }),
+});
+
+// Edit User schema validation
 export const editUserSchema = z.object({
   firstName: z.preprocess(
     (value) => (value === '' || undefined ? undefined : value),

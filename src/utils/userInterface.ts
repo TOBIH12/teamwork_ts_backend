@@ -10,8 +10,8 @@ export type UserInfo = {
   address: string;
 };
 
-export enum UserRoles  {
+export enum UserRoles {
   SuperAdmin = 'super_admin',
   Admin = 'admin',
   Employee = 'employee',
-};
+}

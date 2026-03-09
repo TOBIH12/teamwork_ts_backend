@@ -6,6 +6,8 @@ export const checkEmailQuery = `SELECT * FROM "users" WHERE email = $1`;
 
 export const insertUserQuery = `INSERT INTO "users" (first_name, last_name, email, password, gender, job_role, department, address) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`;
 
+export const saveResetTokenQuery = `UPDATE "users" SET reset_password_token = $1, reset_password_token_expires = $2 WHERE email = $3 RETURNING *`;
+
 export const fetchUserByIdQuery = `SELECT * FROM "users" WHERE "user_id" = $1`;
 
 export const getUsersCount = `SELECT COUNT(*) AS total_count FROM "users"`;
