@@ -4,7 +4,27 @@ import z from 'zod';
 import pool from '../../db';
 import { postGifSchema } from '../../zodSchema';
 import cloudinaryConfig from '../../utils/cloudinaryConfig';
-import { insertGifPostQuery } from '../../queries/posts.queries';
+import {
+  insertGifPostQuery,
+  fetchAllGifsQuery,
+  getGifsCount,
+  fetchUserGifs,
+  getUserGifsCount,
+  fetchGifById,
+  likeGifQuery,
+  removeGifLikeQuery,
+  getGifLikesCountQuery,
+  fetchGifLike,
+  commentOnGifQuery,
+  fetchGifCommentsQuery,
+  editGifCommentQuery,
+  deleteCommentQuery,
+  fetchSingleGifCommentQuery,
+  getGifCommentsCountQuery,
+  deleteGifPostQuery,
+} from '../../queries/posts.queries';
+import { fetchUserByIdQuery } from '../../queries/users.queries';
+import { UserRoles } from '../../utils/userInterface';
 
 dotenv.config();
 
@@ -12,7 +32,10 @@ type PostGifInput = z.infer<typeof postGifSchema>;
 
 export default class PostsControllers {
   // Create GIF Post
-  async createGifPost(req: Request<PostGifInput>, res: Response) {
+  async createGifPost(
+    req: Request<PostGifInput>,
+    res: Response
+  ): Promise<Response> {
     try {
       const { title } = req.body;
 
@@ -62,6 +85,589 @@ export default class PostsControllers {
       return res
         .status(400)
         .json({ status: 'error', error: err || 'Failed to create GIF post' });
+    }
+  }
+
+  // DELETE GIF
+  async deleteGifPost(req: Request, res: Response): Promise<Response> {
+    try {
+      const { gifId } = req.params;
+      const reqUserId = req.user?.user_id;
+
+      const checkGif = await pool.query(fetchGifById, [gifId]);
+
+      if (!checkGif || !checkGif.rows || checkGif.rows.length === 0) {
+        return res.status(404).json({
+          status: 'error',
+          error: 'The gif must have deleted or does not exist.',
+        });
+      }
+
+      const { creator_id } = checkGif.rows[0];
+
+      if (reqUserId !== creator_id) {
+        return res.status(403).json({
+          status: 'error',
+          error: `You cannot delete another user's post`,
+        });
+      }
+
+      const deleteGif = await pool.query(deleteGifPostQuery, [gifId]);
+
+      if (!deleteGif) {
+        return res.status(500).json({
+          status: 'error',
+          error: 'unable to delete post.',
+        });
+      }
+
+      return res.status(200).json({
+        status: 'success',
+        data: {
+          message: 'post deleted.',
+        },
+      });
+    } catch (err: unknown) {
+      console.log(err);
+      return res
+        .status(400)
+        .json({ status: 'error', error: err || 'Failed to delete GIF post' });
+    }
+  }
+
+  // ADMIN DELETE GIF
+  async adminDeleteGifPost(req: Request, res: Response): Promise<Response> {
+    try {
+      const { gifId } = req.params;
+
+      const checkGif = await pool.query(fetchGifById, [gifId]);
+
+      if (!checkGif || !checkGif.rows || checkGif.rows.length === 0) {
+        return res.status(404).json({
+          status: 'error',
+          error: 'The gif must have deleted or does not exist.',
+        });
+      }
+
+      const deleteGif = await pool.query(deleteGifPostQuery, [gifId]);
+
+      if (!deleteGif) {
+        return res.status(500).json({
+          status: 'error',
+          error: 'unable to delete post.',
+        });
+      }
+
+      return res.status(200).json({
+        status: 'success',
+        data: {
+          message: 'post deleted.',
+        },
+      });
+    } catch (err: unknown) {
+      console.log(err);
+      return res
+        .status(400)
+        .json({ status: 'error', error: err || 'Failed to delete GIF post' });
+    }
+  }
+
+  // FETCH all GIFS
+  async fetchAllGifs(req: Request, res: Response): Promise<Response> {
+    try {
+      const page = parseInt(req.params.page);
+      const limit = 10;
+
+      const offset = (page - 1) * limit;
+
+      const gifsCountResult = await pool.query(getGifsCount);
+      const totalGifsCount = gifsCountResult.rows[0].total_count;
+
+      const gifsResponse = await pool.query(fetchAllGifsQuery, [limit, offset]);
+
+      const gifs = gifsResponse.rows;
+
+      return res.status(200).json({
+        status: 'success',
+        data: {
+          message: 'Gifs fetched successfully',
+          gifsCount: parseInt(totalGifsCount),
+          gifs,
+        },
+      });
+    } catch (err: unknown) {
+      return res
+        .status(500)
+        .json({ status: 'error', error: err || 'Server Error' });
+    }
+  }
+
+  // FETCH USER GIFS
+  async fetchUserGifs(req: Request, res: Response): Promise<Response> {
+    try {
+      const creatorId = parseInt(req.params.creatorId);
+      const page = parseInt(req.params.page);
+      const limit = 10;
+
+      const offset = (page - 1) * limit;
+
+      const creatorResponse = await pool.query(fetchUserByIdQuery, [creatorId]);
+
+      if (
+        !creatorResponse ||
+        !creatorResponse.rows ||
+        creatorResponse.rows.length === 0
+      ) {
+        return res.status(404).json({
+          status: 'error',
+          error: 'A problem occured with finding this user',
+        });
+      }
+
+      const gifsCountResult = await pool.query(getUserGifsCount, [creatorId]);
+      const totalUserGifsCount = gifsCountResult.rows[0].user_gifs_count;
+
+      const gifsResponse = await pool.query(fetchUserGifs, [
+        creatorId,
+        limit,
+        offset,
+      ]);
+
+      const gifs = gifsResponse.rows;
+
+      if (gifs.length === 0) {
+        return res.status(200).json({
+          status: 'success',
+          data: {
+            message: `No Gifs yet`,
+          },
+        });
+      }
+
+      return res.status(200).json({
+        status: 'success',
+        data: {
+          message: `User's Gifs fetched successfully`,
+          userGifsCount: parseInt(totalUserGifsCount),
+          gifs,
+        },
+      });
+    } catch (err: unknown) {
+      return res
+        .status(500)
+        .json({ status: 'error', error: err || 'Server Error' });
+    }
+  }
+
+  // FETCH SINGLE GIF
+  async fetchGif(req: Request, res: Response): Promise<Response> {
+    try {
+      const { gifId } = req.params;
+
+      const gifResponse = await pool.query(fetchGifById, [gifId]);
+
+      if (!gifResponse || !gifResponse.rows || gifResponse.rows.length === 0) {
+        return res.status(404).json({
+          status: 'error',
+          error: 'gif not found',
+        });
+      }
+
+      const { creator_id, title, gif_url, created_on } = gifResponse.rows[0];
+
+      return res.status(200).json({
+        status: 'success',
+        data: {
+          message: 'gif successfully fetched',
+          title,
+          gifUrl: gif_url,
+          creatorId: creator_id,
+          createdOn: created_on,
+        },
+      });
+    } catch (err: unknown) {
+      console.log(err);
+      return res
+        .status(500)
+        .json({ status: 'error', error: err || 'Server Error' });
+    }
+  }
+
+  // LIKE GIF
+  async likeGif(req: Request, res: Response): Promise<Response> {
+    try {
+      const gifId = parseInt(req.params.gifId);
+      const likeCreatorId = req.user?.user_id;
+
+      const checkGif = await pool.query(fetchGifById, [gifId]);
+
+      if (!checkGif || !checkGif.rows || checkGif.rows.length === 0) {
+        return res.status(404).json({
+          status: 'error',
+          error: 'gif might have been deleted or does not exist',
+        });
+      }
+
+      const currentTimeInMilliseconds = Date.now();
+      const dbFormatCurrentTime = new Date(
+        currentTimeInMilliseconds
+      ).toISOString();
+
+      const hasLike = await pool.query(fetchGifLike, [likeCreatorId, gifId]);
+
+      if (hasLike.rows.length !== 0) {
+        await pool.query(removeGifLikeQuery, [likeCreatorId, gifId]);
+
+        const getGifLikesCount = await pool.query(getGifLikesCountQuery, [
+          gifId,
+        ]);
+
+        if (!getGifLikesCount.rows[0].gif_likes_count) {
+          return res.status(404).json({
+            status: 'error',
+            error: 'error retrieving likes',
+          });
+        }
+
+        const gifLikeCount = getGifLikesCount.rows[0].gif_likes_count;
+
+        return res.status(200).json({
+          status: 'success',
+          data: {
+            message: 'unliked gif!',
+            likes: gifLikeCount,
+          },
+        });
+      }
+
+      const likeGif = await pool.query(likeGifQuery, [
+        likeCreatorId,
+        gifId,
+        dbFormatCurrentTime,
+      ]);
+
+      if (!likeGif || !likeGif.rows || likeGif.rows.length === 0) {
+        return res.status(500).json({
+          status: 'error',
+          error: 'Could not like post, try again later',
+        });
+      }
+
+      const { liked_at } = likeGif.rows[0];
+
+      const getGifLikesCount = await pool.query(getGifLikesCountQuery, [gifId]);
+
+      if (!getGifLikesCount.rows[0].gif_likes_count) {
+        return res.status(404).json({
+          status: 'error',
+          error: 'error retrieving likes',
+        });
+      }
+
+      const gifLikeCount = getGifLikesCount.rows[0].gif_likes_count;
+
+      return res.status(201).json({
+        status: 'success',
+        data: {
+          message: 'Gif liked!',
+          likedAt: liked_at,
+          likes: gifLikeCount,
+        },
+      });
+    } catch (err: unknown) {
+      console.log(err);
+      return res
+        .status(500)
+        .json({ status: 'error', error: err || 'Server Error' });
+    }
+  }
+
+  // Comment on GIF
+  async commentOnGif(req: Request, res: Response): Promise<Response> {
+    try {
+      const { gifId } = req.params;
+      const commentCreatorId = req.user?.user_id;
+      const { comment } = req.body;
+
+      const checkGif = await pool.query(fetchGifById, [gifId]);
+
+      if (!checkGif || !checkGif.rows || checkGif.rows.length === 0) {
+        return res.status(404).json({
+          status: 'error',
+          error: 'gif might have been deleted or does not exist',
+        });
+      }
+
+      const currentTimeInMilliseconds = Date.now();
+      const dbFormatCurrentTime = new Date(
+        currentTimeInMilliseconds
+      ).toISOString();
+
+      const postedComment = await pool.query(commentOnGifQuery, [
+        comment,
+        dbFormatCurrentTime,
+        commentCreatorId,
+        gifId,
+      ]);
+
+      if (
+        !postedComment ||
+        !postedComment.rows ||
+        postedComment.rows.length === 0
+      ) {
+        return res.status(500).json({
+          status: 'error',
+          error: 'Could not comment on this post, try again later',
+        });
+      }
+
+      const {
+        comment_id,
+        comment_text,
+        commented_at,
+        commenter_id,
+        commented_gif_id,
+      } = postedComment.rows[0];
+
+      return res.status(201).json({
+        status: 'success',
+        data: {
+          message: 'comment posted!',
+          commentId: comment_id,
+          comment: comment_text,
+          createdOn: commented_at,
+          createdBy: commenter_id,
+          gifId: commented_gif_id,
+        },
+      });
+    } catch (err: unknown) {
+      console.log(err);
+      return res
+        .status(500)
+        .json({ status: 'error', error: err || 'Server Error' });
+    }
+  }
+
+  // Fetch GIF comments
+  async fetchGifComments(req: Request, res: Response): Promise<Response> {
+    try {
+      const { gifId } = req.params;
+      const page = parseInt(req.params.page);
+      const limit = 10;
+
+      const offset = (page - 1) * limit;
+
+      const checkGif = await pool.query(fetchGifById, [gifId]);
+
+      if (!checkGif || !checkGif.rows || checkGif.rows.length === 0) {
+        return res.status(404).json({
+          status: 'error',
+          error: 'gif might have been deleted or does not exist',
+        });
+      }
+
+      const gifComments = await pool.query(fetchGifCommentsQuery, [
+        gifId,
+        limit,
+        offset,
+      ]);
+
+      const comments = gifComments.rows;
+
+      const gifCommentsCount = await pool.query(getGifCommentsCountQuery, [
+        gifId,
+      ]);
+
+      const totalGifCommentsCount = gifCommentsCount.rows[0].comments_count;
+
+      if (comments.length === 0) {
+        return res.status(200).json({
+          status: 'success',
+          data: {
+            message: 'Be the first to comment on this post',
+            commentsCount: totalGifCommentsCount,
+            comments,
+          },
+        });
+      }
+
+      return res.status(200).json({
+        status: 'success',
+        data: {
+          message: 'comments fetched successfully',
+          commentsCount: totalGifCommentsCount,
+          comments,
+        },
+      });
+    } catch (err: unknown) {
+      console.log(err);
+      return res
+        .status(500)
+        .json({ status: 'error', error: err || 'Server Error' });
+    }
+  }
+
+  // Edit GIF comment
+  async editGifComment(req: Request, res: Response): Promise<Response> {
+    try {
+      const { commentId } = req.params;
+      const { comment } = req.body;
+
+      const checkComment = await pool.query(fetchSingleGifCommentQuery, [
+        commentId,
+      ]);
+
+      if (
+        !checkComment ||
+        !checkComment.rows ||
+        checkComment.rows.length === 0
+      ) {
+        return res.status(404).json({
+          status: 'error',
+          error: 'comment might have been deleted or does not exist',
+        });
+      }
+
+      const { commenter_id } = checkComment.rows[0];
+
+      if (req.user?.user_id !== commenter_id) {
+        return res.status(403).json({
+          status: 'error',
+          error: 'Forbidden.',
+        });
+      }
+
+      const updatedComment = await pool.query(editGifCommentQuery, [
+        comment,
+        commentId,
+      ]);
+
+      if (
+        !updatedComment ||
+        !updatedComment.rows ||
+        updatedComment.rows[0] === 0
+      ) {
+        return res.status(500).json({
+          status: 'error',
+          error:
+            'Something went wrong when updating comment, please try again later',
+        });
+      }
+
+      const { comment_id, comment_text } = updatedComment.rows[0];
+
+      return res.status(200).json({
+        status: 'success',
+        data: {
+          message: 'comment updated!',
+          commentId: comment_id,
+          comment: comment_text,
+        },
+      });
+    } catch (err: unknown) {
+      console.log(err);
+      return res
+        .status(500)
+        .json({ status: 'error', error: err || 'Server Error' });
+    }
+  }
+
+  // Delete Gif comment
+  async deleteGifComment(req: Request, res: Response): Promise<Response> {
+    try {
+      const { commentId } = req.params;
+
+      const checkComment = await pool.query(fetchSingleGifCommentQuery, [
+        commentId,
+      ]);
+
+      if (
+        !checkComment ||
+        !checkComment.rows ||
+        checkComment.rows.length === 0
+      ) {
+        return res.status(404).json({
+          status: 'error',
+          error: 'comment might have been deleted or does not exist',
+        });
+      }
+
+      const { commenter_id } = checkComment.rows[0];
+
+      if (req.user?.user_id !== commenter_id) {
+        return res.status(403).json({
+          status: 'error',
+          error: 'Forbidden.',
+        });
+      }
+
+      const deleteGifComment = await pool.query(deleteCommentQuery, [
+        commentId,
+      ]);
+
+      if (!deleteGifComment) {
+        return res.status(500).json({
+          status: 'error',
+          error: 'unable to delete comment, please retry later',
+        });
+      }
+
+      return res.status(200).json({
+        status: 'success',
+        data: {
+          message: 'comment deleted',
+        },
+      });
+    } catch (err: unknown) {
+      console.log(err);
+      return res
+        .status(500)
+        .json({ status: 'error', error: err || 'Server Error' });
+    }
+  }
+
+  // ADMIN DELETE COMMENT
+  async adminDeleteGifComment(req: Request, res: Response): Promise<Response> {
+    try {
+      const { commentId } = req.params;
+
+      const checkComment = await pool.query(fetchSingleGifCommentQuery, [
+        commentId,
+      ]);
+
+      if (
+        !checkComment ||
+        !checkComment.rows ||
+        checkComment.rows.length === 0
+      ) {
+        return res.status(404).json({
+          status: 'error',
+          error: 'comment might have been deleted or does not exist',
+        });
+      }
+
+      const deleteGifComment = await pool.query(deleteCommentQuery, [
+        commentId,
+      ]);
+
+      if (!deleteGifComment) {
+        return res.status(500).json({
+          status: 'error',
+          error: 'unable to delete comment, please retry later',
+        });
+      }
+
+      return res.status(200).json({
+        status: 'success',
+        data: {
+          message: 'comment deleted',
+        },
+      });
+    } catch (err: unknown) {
+      console.log(err);
+      return res
+        .status(500)
+        .json({ status: 'error', error: err || 'Server Error' });
     }
   }
 }
