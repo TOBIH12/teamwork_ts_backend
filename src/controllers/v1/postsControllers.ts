@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
 import dotenv from 'dotenv';
 import z from 'zod';
-import { buffer } from 'stream/consumers';
 import pool from '../../db';
 import { postGifSchema } from '../../zodSchema';
 import {
