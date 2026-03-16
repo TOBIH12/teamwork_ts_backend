@@ -5,7 +5,10 @@ import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 import z from 'zod';
 import pool from '../../db';
-import cloudinaryConfig from '../../utils/cloudinaryConfig';
+import {
+  handleCloudinaryUpload,
+  handleCloudinaryFileDelete,
+} from '../../utils/cloudinaryConfig';
 import {
   checkEmailQuery,
   fetchUserByIdQuery,
@@ -521,11 +524,10 @@ export default class UserControllers {
 
       const userImg = req.file;
 
-      const userImgUrl = await cloudinaryConfig.uploader.upload(userImg.path, {
-        resource_type: 'auto',
-        folder: 'avatars',
-        public_id: `${Date.now()}`,
-      });
+      const b64 = Buffer.from(userImg.buffer).toString('base64');
+      const dataURI = `data:${userImg.mimetype};base64,${b64}`;
+
+      const userImgUrl = await handleCloudinaryUpload(dataURI);
 
       if (!userImgUrl || !userImgUrl.secure_url) {
         return res.status(500).json({
@@ -642,7 +644,8 @@ export default class UserControllers {
         });
       }
 
-      const { user_id, first_name, last_name, job_role } = user.rows[0];
+      const { user_id, first_name, last_name, job_role, user_img } =
+        user.rows[0];
 
       if (job_role === UserRoles.SuperAdmin) {
         return res.status(403).json({
@@ -651,6 +654,10 @@ export default class UserControllers {
         });
       }
 
+      if(typeof user_img === 'string'){
+         await handleCloudinaryFileDelete(user_img);
+      }
+      
       const deleteUser = await pool.query(deleteUserQuery, [user_id]);
 
       if (!deleteUser || deleteUser.rows.length === 0) {

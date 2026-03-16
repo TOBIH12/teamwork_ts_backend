@@ -596,7 +596,7 @@ describe('Edit comment endpoint', () => {
 });
 
 // DELETE Gif comment
-describe('DELETE Gif Endpoint', () => {
+describe('DELETE Gif comment Endpoint', () => {
   let token = '';
 
   before(async () => {

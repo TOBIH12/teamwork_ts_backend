@@ -1,9 +1,13 @@
 import { Request, Response } from 'express';
 import dotenv from 'dotenv';
 import z from 'zod';
+import { buffer } from 'stream/consumers';
 import pool from '../../db';
 import { postGifSchema } from '../../zodSchema';
-import cloudinaryConfig from '../../utils/cloudinaryConfig';
+import {
+  handleCloudinaryUpload,
+  handleCloudinaryFileDelete,
+} from '../../utils/cloudinaryConfig';
 import {
   insertGifPostQuery,
   fetchAllGifsQuery,
@@ -24,7 +28,6 @@ import {
   deleteGifPostQuery,
 } from '../../queries/posts.queries';
 import { fetchUserByIdQuery } from '../../queries/users.queries';
-import { UserRoles } from '../../utils/userInterface';
 
 dotenv.config();
 
@@ -47,11 +50,10 @@ export default class PostsControllers {
 
       const gif = req.file;
 
-      const gifUrl = await cloudinaryConfig.uploader.upload(gif.path, {
-        resource_type: 'auto',
-        folder: 'gifs',
-        public_id: `${Date.now()}`,
-      });
+      const b64 = Buffer.from(gif.buffer).toString('base64');
+      const dataURI = `data:${gif.mimetype};base64,${b64}`;
+
+      const gifUrl = await handleCloudinaryUpload(dataURI);
 
       if (!gifUrl || !gifUrl.secure_url) {
         return res.status(500).json({
@@ -103,7 +105,7 @@ export default class PostsControllers {
         });
       }
 
-      const { creator_id } = checkGif.rows[0];
+      const { creator_id, gif_url } = checkGif.rows[0];
 
       if (reqUserId !== creator_id) {
         return res.status(403).json({
@@ -111,6 +113,8 @@ export default class PostsControllers {
           error: `You cannot delete another user's post`,
         });
       }
+
+      await handleCloudinaryFileDelete(gif_url);
 
       const deleteGif = await pool.query(deleteGifPostQuery, [gifId]);
 
@@ -148,6 +152,10 @@ export default class PostsControllers {
           error: 'The gif must have deleted or does not exist.',
         });
       }
+
+      const { gif_url } = checkGif.rows[0];
+
+      await handleCloudinaryFileDelete(gif_url);
 
       const deleteGif = await pool.query(deleteGifPostQuery, [gifId]);
 
