@@ -2,7 +2,7 @@
 
 export const insertGifPostQuery = `INSERT INTO gifs (title, gif_url, creator_id) VALUES ($1, $2, $3) RETURNING *`;
 
-export const deleteGifPostQuery = `DELETE FROM gifs WHERE gif_id = $1`;
+export const deleteGifPostQuery = `DELETE FROM gifs WHERE gif_id = $1 RETURNING *`;
 
 export const fetchAllGifsQuery = `SELECT 
 gif_id, creator_id, title, gif_url, created_on 
@@ -42,4 +42,4 @@ export const fetchSingleGifCommentQuery = `SELECT * FROM "gif_comments" WHERE co
 
 export const editGifCommentQuery = `UPDATE "gif_comments" SET comment_text = $1 WHERE "comment_id" = $2 RETURNING *`;
 
-export const deleteCommentQuery = `DELETE FROM "gif_comments" WHERE "comment_id" = $1`;
+export const deleteCommentQuery = `DELETE FROM "gif_comments" WHERE "comment_id" = $1 RETURNING *`;

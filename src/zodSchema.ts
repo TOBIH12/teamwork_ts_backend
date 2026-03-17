@@ -146,7 +146,7 @@ export const postGifSchemaDTO = z.object({
 
 // GIF LIKE SCHEMA
 export const gifLikeSchema = z.object({
-  gifId: z.string().min(1, 'gif id is missing'),
+  gifId: z.string().min(1, 'Gif id is missing')
 });
 
 export const gifLikeSchemaDTO = z.object({
@@ -164,13 +164,13 @@ export const gifCommentSchema = z.object({
 export const gifCommentSchemaDTO = z.object({
   body: gifCommentSchema,
   params: z.object({
-    gifId: z.string().min(1, 'gif id is missing'),
-  }),
+    gifId: z.string().min(1, 'Gif id is missing')
+  })
 });
 
 export const editGifCommentSchemaDTO = z.object({
   body: gifCommentSchema,
-  params: z.object({
-    commentId: z.string().min(1, 'comment id is missing'),
-  }),
+   params: z.object({
+    commentId: z.string().min(1, 'Comment id is missing')
+  })
 });

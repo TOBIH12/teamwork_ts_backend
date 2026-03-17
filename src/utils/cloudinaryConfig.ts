@@ -11,10 +11,10 @@ cloudinary.v2.config({
 });
 const cloudinaryConfig = cloudinary.v2;
 
-export async function handleCloudinaryUpload(file: string) {
+export async function handleCloudinaryUpload(file: string, folder: string) {
   const res = await cloudinaryConfig.uploader.upload(file, {
     resource_type: 'auto',
-    folder: 'gifs',
+    folder: folder,
     public_id: `${Date.now()}`,
   });
 
@@ -24,11 +24,14 @@ export async function handleCloudinaryUpload(file: string) {
 export async function handleCloudinaryFileDelete(file: string) {
   const public_id = extractPublicId(file);
 
-  await cloudinaryConfig.uploader
+  try {
+    const result = await cloudinaryConfig.uploader
     .destroy(public_id, {
       resource_type: 'image',
-    })
-    .catch((err: unknown) => {
-      return console.log(err);
     });
+    return result;
+  } catch (err: unknown) {
+     console.error('Error deleting Cloudinary file', { file, public_id, err });
+     throw err;
+  }
 }

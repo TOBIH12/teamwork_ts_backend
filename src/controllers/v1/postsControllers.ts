@@ -52,7 +52,7 @@ export default class PostsControllers {
       const b64 = Buffer.from(gif.buffer).toString('base64');
       const dataURI = `data:${gif.mimetype};base64,${b64}`;
 
-      const gifUrl = await handleCloudinaryUpload(dataURI);
+      const gifUrl = await handleCloudinaryUpload(dataURI, "gifs");
 
       if (!gifUrl || !gifUrl.secure_url) {
         return res.status(500).json({
@@ -95,7 +95,16 @@ export default class PostsControllers {
       const { gifId } = req.params;
       const reqUserId = req.user?.user_id;
 
-      const checkGif = await pool.query(fetchGifById, [gifId]);
+      const parsedGifId = Number.parseInt(gifId, 10)
+
+      if(!Number.isFinite(parsedGifId) || parsedGifId <= 0){
+        return res.status(400).json({
+           status: 'error',
+           error: 'Invalid GIF ID',
+        })
+      }
+
+      const checkGif = await pool.query(fetchGifById, [parsedGifId]);
 
       if (!checkGif || !checkGif.rows || checkGif.rows.length === 0) {
         return res.status(404).json({
@@ -115,9 +124,9 @@ export default class PostsControllers {
 
       await handleCloudinaryFileDelete(gif_url);
 
-      const deleteGif = await pool.query(deleteGifPostQuery, [gifId]);
+      const deleteGif = await pool.query(deleteGifPostQuery, [parsedGifId]);
 
-      if (!deleteGif) {
+      if (!deleteGif || deleteGif.rows.length === 0) {
         return res.status(500).json({
           status: 'error',
           error: 'unable to delete post.',
@@ -131,7 +140,6 @@ export default class PostsControllers {
         },
       });
     } catch (err: unknown) {
-      console.log(err);
       return res
         .status(400)
         .json({ status: 'error', error: err || 'Failed to delete GIF post' });
@@ -143,7 +151,16 @@ export default class PostsControllers {
     try {
       const { gifId } = req.params;
 
-      const checkGif = await pool.query(fetchGifById, [gifId]);
+      const parsedGifId = Number.parseInt(gifId, 10)
+
+      if(!Number.isFinite(parsedGifId) || parsedGifId <= 0){
+        return res.status(400).json({
+           status: 'error',
+           error: 'Invalid GIF ID',
+        })
+      }
+
+      const checkGif = await pool.query(fetchGifById, [parsedGifId]);
 
       if (!checkGif || !checkGif.rows || checkGif.rows.length === 0) {
         return res.status(404).json({
@@ -156,9 +173,9 @@ export default class PostsControllers {
 
       await handleCloudinaryFileDelete(gif_url);
 
-      const deleteGif = await pool.query(deleteGifPostQuery, [gifId]);
+      const deleteGif = await pool.query(deleteGifPostQuery, [parsedGifId]);
 
-      if (!deleteGif) {
+      if (!deleteGif || deleteGif.rows.length === 0) {
         return res.status(500).json({
           status: 'error',
           error: 'unable to delete post.',
@@ -172,7 +189,6 @@ export default class PostsControllers {
         },
       });
     } catch (err: unknown) {
-      console.log(err);
       return res
         .status(400)
         .json({ status: 'error', error: err || 'Failed to delete GIF post' });
@@ -182,13 +198,21 @@ export default class PostsControllers {
   // FETCH all GIFS
   async fetchAllGifs(req: Request, res: Response): Promise<Response> {
     try {
-      const page = parseInt(req.params.page);
+      const page = Number.parseInt(req.params.page, 10);
       const limit = 10;
+
+      if(!Number.isFinite(page) || page <= 0){
+        return res.status(400).json({
+          status: 'error',
+          error: 'Invalid page number'
+        })
+      }
 
       const offset = (page - 1) * limit;
 
       const gifsCountResult = await pool.query(getGifsCount);
       const totalGifsCount = gifsCountResult.rows[0].total_count;
+      const parsedGifsCount = Number.parseInt(totalGifsCount, 10);
 
       const gifsResponse = await pool.query(fetchAllGifsQuery, [limit, offset]);
 
@@ -198,7 +222,7 @@ export default class PostsControllers {
         status: 'success',
         data: {
           message: 'Gifs fetched successfully',
-          gifsCount: parseInt(totalGifsCount),
+          gifsCount: parsedGifsCount,
           gifs,
         },
       });
@@ -212,8 +236,8 @@ export default class PostsControllers {
   // FETCH USER GIFS
   async fetchUserGifs(req: Request, res: Response): Promise<Response> {
     try {
-      const creatorId = parseInt(req.params.creatorId);
-      const page = parseInt(req.params.page);
+      const creatorId = Number.parseInt(req.params.creatorId, 10);
+      const page = Number.parseInt(req.params.page, 10);
       const limit = 10;
 
       const offset = (page - 1) * limit;
@@ -233,6 +257,7 @@ export default class PostsControllers {
 
       const gifsCountResult = await pool.query(getUserGifsCount, [creatorId]);
       const totalUserGifsCount = gifsCountResult.rows[0].user_gifs_count;
+      const parsedGifsCount = Number.parseInt(totalUserGifsCount, 10)
 
       const gifsResponse = await pool.query(fetchUserGifs, [
         creatorId,
@@ -255,7 +280,7 @@ export default class PostsControllers {
         status: 'success',
         data: {
           message: `User's Gifs fetched successfully`,
-          userGifsCount: parseInt(totalUserGifsCount),
+          userGifsCount: parsedGifsCount,
           gifs,
         },
       });
@@ -271,7 +296,16 @@ export default class PostsControllers {
     try {
       const { gifId } = req.params;
 
-      const gifResponse = await pool.query(fetchGifById, [gifId]);
+       const parsedGifId = Number.parseInt(gifId, 10)
+
+      if(!Number.isFinite(parsedGifId) || parsedGifId <= 0){
+        return res.status(400).json({
+           status: 'error',
+           error: 'Invalid GIF ID',
+        })
+      }
+
+      const gifResponse = await pool.query(fetchGifById, [parsedGifId]);
 
       if (!gifResponse || !gifResponse.rows || gifResponse.rows.length === 0) {
         return res.status(404).json({
@@ -293,7 +327,6 @@ export default class PostsControllers {
         },
       });
     } catch (err: unknown) {
-      console.log(err);
       return res
         .status(500)
         .json({ status: 'error', error: err || 'Server Error' });
@@ -303,10 +336,19 @@ export default class PostsControllers {
   // LIKE GIF
   async likeGif(req: Request, res: Response): Promise<Response> {
     try {
-      const gifId = parseInt(req.params.gifId);
+      const {gifId} = req.params;
       const likeCreatorId = req.user?.user_id;
 
-      const checkGif = await pool.query(fetchGifById, [gifId]);
+       const parsedGifId = Number.parseInt(gifId, 10)
+
+       if(!Number.isFinite(parsedGifId) || parsedGifId <= 0){
+        return res.status(400).json({
+          status: 'error',
+          error: 'Invalid Gif Id'
+        })
+       }
+
+      const checkGif = await pool.query(fetchGifById, [parsedGifId]);
 
       if (!checkGif || !checkGif.rows || checkGif.rows.length === 0) {
         return res.status(404).json({
@@ -320,13 +362,13 @@ export default class PostsControllers {
         currentTimeInMilliseconds
       ).toISOString();
 
-      const hasLike = await pool.query(fetchGifLike, [likeCreatorId, gifId]);
+      const hasLike = await pool.query(fetchGifLike, [likeCreatorId, parsedGifId]);
 
       if (hasLike.rows.length !== 0) {
-        await pool.query(removeGifLikeQuery, [likeCreatorId, gifId]);
+        await pool.query(removeGifLikeQuery, [likeCreatorId, parsedGifId]);
 
         const getGifLikesCount = await pool.query(getGifLikesCountQuery, [
-          gifId,
+          parsedGifId,
         ]);
 
         if (!getGifLikesCount.rows[0].gif_likes_count) {
@@ -337,19 +379,20 @@ export default class PostsControllers {
         }
 
         const gifLikeCount = getGifLikesCount.rows[0].gif_likes_count;
+        const parsedGifLikeCount = Number.parseInt(gifLikeCount, 10)
 
         return res.status(200).json({
           status: 'success',
           data: {
             message: 'unliked gif!',
-            likes: gifLikeCount,
+            likes: parsedGifLikeCount,
           },
         });
       }
 
       const likeGif = await pool.query(likeGifQuery, [
         likeCreatorId,
-        gifId,
+        parsedGifId,
         dbFormatCurrentTime,
       ]);
 
@@ -362,7 +405,7 @@ export default class PostsControllers {
 
       const { liked_at } = likeGif.rows[0];
 
-      const getGifLikesCount = await pool.query(getGifLikesCountQuery, [gifId]);
+      const getGifLikesCount = await pool.query(getGifLikesCountQuery, [parsedGifId]);
 
       if (!getGifLikesCount.rows[0].gif_likes_count) {
         return res.status(404).json({
@@ -372,17 +415,17 @@ export default class PostsControllers {
       }
 
       const gifLikeCount = getGifLikesCount.rows[0].gif_likes_count;
+      const parsedGifLikeCount = Number.parseInt(gifLikeCount, 10);
 
       return res.status(201).json({
         status: 'success',
         data: {
           message: 'Gif liked!',
           likedAt: liked_at,
-          likes: gifLikeCount,
+          likes: parsedGifLikeCount,
         },
       });
     } catch (err: unknown) {
-      console.log(err);
       return res
         .status(500)
         .json({ status: 'error', error: err || 'Server Error' });
@@ -396,7 +439,17 @@ export default class PostsControllers {
       const commentCreatorId = req.user?.user_id;
       const { comment } = req.body;
 
-      const checkGif = await pool.query(fetchGifById, [gifId]);
+      const parsedGifId = Number.parseInt(gifId, 10);
+      console.log('parsed Gif Id:', parsedGifId)
+      
+       if(!Number.isFinite(parsedGifId) || parsedGifId <= 0){
+        return res.status(400).json({
+          status: 'error',
+          error: 'Invalid Gif Id'
+        })
+       }
+
+      const checkGif = await pool.query(fetchGifById, [parsedGifId]);
 
       if (!checkGif || !checkGif.rows || checkGif.rows.length === 0) {
         return res.status(404).json({
@@ -414,7 +467,7 @@ export default class PostsControllers {
         comment,
         dbFormatCurrentTime,
         commentCreatorId,
-        gifId,
+        parsedGifId,
       ]);
 
       if (
@@ -448,7 +501,7 @@ export default class PostsControllers {
         },
       });
     } catch (err: unknown) {
-      console.log(err);
+      console.log(err)
       return res
         .status(500)
         .json({ status: 'error', error: err || 'Server Error' });
@@ -459,12 +512,28 @@ export default class PostsControllers {
   async fetchGifComments(req: Request, res: Response): Promise<Response> {
     try {
       const { gifId } = req.params;
-      const page = parseInt(req.params.page);
+      const page = Number.parseInt(req.params.page, 10);
       const limit = 10;
+
+      const parsedGifId = Number.parseInt(gifId, 10);
+
+      if(!Number.isFinite(parsedGifId) || parsedGifId <= 0){
+        return res.status(400).json({
+          status: 'error',
+          error: 'Invalid Gif Id',
+        })
+      }
+
+      if(!Number.isFinite(page) || page <= 0){
+        return res.status(400).json({
+          status: 'error',
+          error: 'Invalid page number',
+        })
+      }
 
       const offset = (page - 1) * limit;
 
-      const checkGif = await pool.query(fetchGifById, [gifId]);
+      const checkGif = await pool.query(fetchGifById, [parsedGifId]);
 
       if (!checkGif || !checkGif.rows || checkGif.rows.length === 0) {
         return res.status(404).json({
@@ -474,7 +543,7 @@ export default class PostsControllers {
       }
 
       const gifComments = await pool.query(fetchGifCommentsQuery, [
-        gifId,
+        parsedGifId,
         limit,
         offset,
       ]);
@@ -482,17 +551,18 @@ export default class PostsControllers {
       const comments = gifComments.rows;
 
       const gifCommentsCount = await pool.query(getGifCommentsCountQuery, [
-        gifId,
+        parsedGifId,
       ]);
 
       const totalGifCommentsCount = gifCommentsCount.rows[0].comments_count;
+      const parsedCommentsCount = Number.parseInt(totalGifCommentsCount, 10);
 
       if (comments.length === 0) {
         return res.status(200).json({
           status: 'success',
           data: {
             message: 'Be the first to comment on this post',
-            commentsCount: totalGifCommentsCount,
+            commentsCount: parsedCommentsCount,
             comments,
           },
         });
@@ -502,12 +572,11 @@ export default class PostsControllers {
         status: 'success',
         data: {
           message: 'comments fetched successfully',
-          commentsCount: totalGifCommentsCount,
+          commentsCount: parsedCommentsCount, 
           comments,
         },
       });
     } catch (err: unknown) {
-      console.log(err);
       return res
         .status(500)
         .json({ status: 'error', error: err || 'Server Error' });
@@ -520,8 +589,18 @@ export default class PostsControllers {
       const { commentId } = req.params;
       const { comment } = req.body;
 
+      const parsedCommentId = Number.parseInt(commentId, 10);
+
+      
+       if(!Number.isFinite(parsedCommentId) || parsedCommentId <= 0){
+        return res.status(400).json({
+          status: 'error',
+          error: 'Invalid Gif Id'
+        })
+       }
+
       const checkComment = await pool.query(fetchSingleGifCommentQuery, [
-        commentId,
+        parsedCommentId,
       ]);
 
       if (
@@ -546,13 +625,13 @@ export default class PostsControllers {
 
       const updatedComment = await pool.query(editGifCommentQuery, [
         comment,
-        commentId,
+        parsedCommentId,
       ]);
 
       if (
         !updatedComment ||
         !updatedComment.rows ||
-        updatedComment.rows[0] === 0
+        updatedComment.rows.length === 0
       ) {
         return res.status(500).json({
           status: 'error',
@@ -572,7 +651,6 @@ export default class PostsControllers {
         },
       });
     } catch (err: unknown) {
-      console.log(err);
       return res
         .status(500)
         .json({ status: 'error', error: err || 'Server Error' });
@@ -584,8 +662,17 @@ export default class PostsControllers {
     try {
       const { commentId } = req.params;
 
+      const parsedCommentId = Number.parseInt(commentId, 10);
+
+      if(!Number.isFinite(parsedCommentId) || parsedCommentId <= 0){
+        return res.status(400).json({
+          status: 'error',
+          error: 'Invalid Gif Id',
+        })
+      }
+
       const checkComment = await pool.query(fetchSingleGifCommentQuery, [
-        commentId,
+        parsedCommentId,
       ]);
 
       if (
@@ -609,10 +696,10 @@ export default class PostsControllers {
       }
 
       const deleteGifComment = await pool.query(deleteCommentQuery, [
-        commentId,
+        parsedCommentId,
       ]);
 
-      if (!deleteGifComment) {
+      if (!deleteGifComment || deleteGifComment.rows.length === 0) {
         return res.status(500).json({
           status: 'error',
           error: 'unable to delete comment, please retry later',
@@ -626,7 +713,6 @@ export default class PostsControllers {
         },
       });
     } catch (err: unknown) {
-      console.log(err);
       return res
         .status(500)
         .json({ status: 'error', error: err || 'Server Error' });
@@ -638,8 +724,17 @@ export default class PostsControllers {
     try {
       const { commentId } = req.params;
 
+      const parsedCommentId = Number.parseInt(commentId, 10);
+
+      if(!Number.isFinite(parsedCommentId) || parsedCommentId <= 0){
+        return res.status(400).json({
+          status: 'error',
+          error: 'Invalid Gif Id',
+        })
+      }
+
       const checkComment = await pool.query(fetchSingleGifCommentQuery, [
-        commentId,
+        parsedCommentId,
       ]);
 
       if (
@@ -654,10 +749,10 @@ export default class PostsControllers {
       }
 
       const deleteGifComment = await pool.query(deleteCommentQuery, [
-        commentId,
+        parsedCommentId,
       ]);
 
-      if (!deleteGifComment) {
+      if (!deleteGifComment || deleteGifComment.rows.length === 0) {
         return res.status(500).json({
           status: 'error',
           error: 'unable to delete comment, please retry later',
@@ -671,7 +766,6 @@ export default class PostsControllers {
         },
       });
     } catch (err: unknown) {
-      console.log(err);
       return res
         .status(500)
         .json({ status: 'error', error: err || 'Server Error' });

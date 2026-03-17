@@ -215,7 +215,7 @@ export default class UserControllers {
       };
 
       await sendEmail(emailOptions).catch((err) => {
-        pool.query(saveResetTokenQuery, ['-1', validDbTime, user_id]);
+        pool.query(saveResetTokenQuery, ['-1', validDbTime, userEmail]);
         throw new Error(`Error sending email. Please try again later: ${err}`);
       });
 
@@ -240,12 +240,14 @@ export default class UserControllers {
       const { newPassword, confirmNewPassword } = req.body;
       const { userId, token } = req.params;
 
+      const parsedUserId = Number.parseInt(userId, 10)
+
       const hashedToken = crypto
         .createHash('sha256')
         .update(token)
         .digest('hex');
 
-      const dbTokenUserLookUp = await pool.query(fetchUserByIdQuery, [userId]);
+      const dbTokenUserLookUp = await pool.query(fetchUserByIdQuery, [parsedUserId]);
 
       if (!dbTokenUserLookUp.rows || dbTokenUserLookUp.rows.length === 0) {
         return res.status(400).json({
@@ -291,13 +293,13 @@ export default class UserControllers {
         user_id,
       ]);
 
-      if (!updatedNewPassword) {
+      if (!updatedNewPassword || updatedNewPassword.rows.length === 0) {
         return res.status(400).json({
           status: 'error',
           error: 'Could not update password. please try again later.',
         });
       }
-
+      
       return res.status(200).json({
         status: 'success',
         data: {
@@ -316,8 +318,15 @@ export default class UserControllers {
   // Get Users
   async getUsers(req: Request, res: Response): Promise<Response> {
     try {
-      const page = parseInt(req.params.page);
+      const page = Number.parseInt(req.params.page, 10);
       const limit = 10;
+
+      if(!Number.isFinite(page) || page <= 0){
+        return res.status(400).json({
+          status: 'error',
+          error: 'Invalid page number'
+        })
+      }
 
       const offset = (page - 1) * limit;
 
@@ -349,7 +358,9 @@ export default class UserControllers {
     try {
       const { userId } = req.params;
 
-      const userResponse = await pool.query(fetchUserByIdQuery, [userId]);
+      const parsedUserId = Number.parseInt(userId, 10)
+
+      const userResponse = await pool.query(fetchUserByIdQuery, [parsedUserId]);
 
       if (
         !userResponse ||
@@ -522,12 +533,20 @@ export default class UserControllers {
         });
       }
 
+      const checkUser = await pool.query(fetchUserByIdQuery, [reqUserId]);
+
+      const { user_img } = checkUser.rows[0];
+
+      if(typeof user_img === 'string'){
+        handleCloudinaryFileDelete(user_img)
+      }
+
       const userImg = req.file;
 
       const b64 = Buffer.from(userImg.buffer).toString('base64');
       const dataURI = `data:${userImg.mimetype};base64,${b64}`;
 
-      const userImgUrl = await handleCloudinaryUpload(dataURI);
+      const userImgUrl = await handleCloudinaryUpload(dataURI, "avatars");
 
       if (!userImgUrl || !userImgUrl.secure_url) {
         return res.status(500).json({
@@ -570,7 +589,9 @@ export default class UserControllers {
       const { userId } = req.params;
       const { role } = req.params;
 
-      const user = await pool.query(fetchUserByIdQuery, [userId]);
+      const parsedUserId = Number.parseInt(userId, 10)
+
+      const user = await pool.query(fetchUserByIdQuery, [parsedUserId]);
 
       if (!user || !user.rows[0] || user.rows.length === 0) {
         return res.status(404).json({
@@ -635,7 +656,9 @@ export default class UserControllers {
     try {
       const { userId } = req.params;
 
-      const user = await pool.query(fetchUserByIdQuery, [userId]);
+      const parsedUserId = Number.parseInt(userId, 10)
+
+      const user = await pool.query(fetchUserByIdQuery, [parsedUserId]);
 
       if (!user || !user.rows[0] || user.rows.length === 0) {
         return res.status(404).json({

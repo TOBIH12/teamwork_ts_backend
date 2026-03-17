@@ -2,4 +2,4 @@
 
 
 ALTER TABLE IF EXISTS public.gif_comments
-DROP CONSTRAINT gif_comments_pkey;
+DROP CONSTRAINT IF EXISTS gif_comments_pkey;
