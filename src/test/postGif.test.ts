@@ -71,7 +71,7 @@ describe('Post GIFS Endpoint', () => {
       );
     expect(res.status).to.equal(201);
     expect(res.body).to.have.property('status', 'success');
-    expect(res.body.data).to.have.property('id');
+    expect(res.body.data).to.have.property('gifId');
     expect(res.body.data).to.have.property(
       'message',
       'GIF post created successfully'
