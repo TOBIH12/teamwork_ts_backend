@@ -74,7 +74,7 @@ export default class PostsControllers {
       return res.status(201).json({
         status: 'success',
         data: {
-          id: gif_id,
+          gifId: gif_id,
           message: 'GIF post created successfully',
           createdOn: created_on,
           title: newGifPost.rows[0].title,
@@ -96,13 +96,6 @@ export default class PostsControllers {
       const reqUserId = req.user?.user_id;
 
       const parsedGifId = Number.parseInt(gifId, 10)
-
-      if(!Number.isFinite(parsedGifId) || parsedGifId <= 0){
-        return res.status(400).json({
-           status: 'error',
-           error: 'Invalid GIF ID',
-        })
-      }
 
       const checkGif = await pool.query(fetchGifById, [parsedGifId]);
 
@@ -153,13 +146,6 @@ export default class PostsControllers {
 
       const parsedGifId = Number.parseInt(gifId, 10)
 
-      if(!Number.isFinite(parsedGifId) || parsedGifId <= 0){
-        return res.status(400).json({
-           status: 'error',
-           error: 'Invalid GIF ID',
-        })
-      }
-
       const checkGif = await pool.query(fetchGifById, [parsedGifId]);
 
       if (!checkGif || !checkGif.rows || checkGif.rows.length === 0) {
@@ -200,13 +186,6 @@ export default class PostsControllers {
     try {
       const page = Number.parseInt(req.params.page, 10);
       const limit = 10;
-
-      if(!Number.isFinite(page) || page <= 0){
-        return res.status(400).json({
-          status: 'error',
-          error: 'Invalid page number'
-        })
-      }
 
       const offset = (page - 1) * limit;
 
@@ -298,13 +277,6 @@ export default class PostsControllers {
 
        const parsedGifId = Number.parseInt(gifId, 10)
 
-      if(!Number.isFinite(parsedGifId) || parsedGifId <= 0){
-        return res.status(400).json({
-           status: 'error',
-           error: 'Invalid GIF ID',
-        })
-      }
-
       const gifResponse = await pool.query(fetchGifById, [parsedGifId]);
 
       if (!gifResponse || !gifResponse.rows || gifResponse.rows.length === 0) {
@@ -340,13 +312,6 @@ export default class PostsControllers {
       const likeCreatorId = req.user?.user_id;
 
        const parsedGifId = Number.parseInt(gifId, 10)
-
-       if(!Number.isFinite(parsedGifId) || parsedGifId <= 0){
-        return res.status(400).json({
-          status: 'error',
-          error: 'Invalid Gif Id'
-        })
-       }
 
       const checkGif = await pool.query(fetchGifById, [parsedGifId]);
 
@@ -440,14 +405,6 @@ export default class PostsControllers {
       const { comment } = req.body;
 
       const parsedGifId = Number.parseInt(gifId, 10);
-      console.log('parsed Gif Id:', parsedGifId)
-      
-       if(!Number.isFinite(parsedGifId) || parsedGifId <= 0){
-        return res.status(400).json({
-          status: 'error',
-          error: 'Invalid Gif Id'
-        })
-       }
 
       const checkGif = await pool.query(fetchGifById, [parsedGifId]);
 
@@ -517,20 +474,6 @@ export default class PostsControllers {
 
       const parsedGifId = Number.parseInt(gifId, 10);
 
-      if(!Number.isFinite(parsedGifId) || parsedGifId <= 0){
-        return res.status(400).json({
-          status: 'error',
-          error: 'Invalid Gif Id',
-        })
-      }
-
-      if(!Number.isFinite(page) || page <= 0){
-        return res.status(400).json({
-          status: 'error',
-          error: 'Invalid page number',
-        })
-      }
-
       const offset = (page - 1) * limit;
 
       const checkGif = await pool.query(fetchGifById, [parsedGifId]);
@@ -590,14 +533,6 @@ export default class PostsControllers {
       const { comment } = req.body;
 
       const parsedCommentId = Number.parseInt(commentId, 10);
-
-      
-       if(!Number.isFinite(parsedCommentId) || parsedCommentId <= 0){
-        return res.status(400).json({
-          status: 'error',
-          error: 'Invalid Gif Id'
-        })
-       }
 
       const checkComment = await pool.query(fetchSingleGifCommentQuery, [
         parsedCommentId,
@@ -661,15 +596,7 @@ export default class PostsControllers {
   async deleteGifComment(req: Request, res: Response): Promise<Response> {
     try {
       const { commentId } = req.params;
-
       const parsedCommentId = Number.parseInt(commentId, 10);
-
-      if(!Number.isFinite(parsedCommentId) || parsedCommentId <= 0){
-        return res.status(400).json({
-          status: 'error',
-          error: 'Invalid Gif Id',
-        })
-      }
 
       const checkComment = await pool.query(fetchSingleGifCommentQuery, [
         parsedCommentId,
@@ -725,13 +652,6 @@ export default class PostsControllers {
       const { commentId } = req.params;
 
       const parsedCommentId = Number.parseInt(commentId, 10);
-
-      if(!Number.isFinite(parsedCommentId) || parsedCommentId <= 0){
-        return res.status(400).json({
-          status: 'error',
-          error: 'Invalid Gif Id',
-        })
-      }
 
       const checkComment = await pool.query(fetchSingleGifCommentQuery, [
         parsedCommentId,

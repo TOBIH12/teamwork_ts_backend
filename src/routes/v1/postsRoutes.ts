@@ -8,6 +8,12 @@ import {
   gifLikeSchemaDTO,
   gifCommentSchemaDTO,
   editGifCommentSchemaDTO,
+  deleteGifSchemaDTO,
+  fetchAllGifsSchemaDTO,
+  fetchUserGifsSchemaDTO,
+  fetchGifSchemaDTO,
+  fetchGifCommentSchemaDTO,
+  deleteGifCommentSchemaDTO,
 } from '../../zodSchema';
 import { uploadedGif } from '../../middlewares/multerMiddleware';
 
@@ -24,21 +30,32 @@ router.post(
 router.delete(
   '/gif/delete_gif/:gifId',
   authMiddleware,
+  validationMiddleware(deleteGifSchemaDTO),
   postsControllers.deleteGifPost
 );
 router.delete(
   '/gif/admin_delete_gif/:gifId',
   authMiddleware,
   adminAuthentication,
+  validationMiddleware(deleteGifSchemaDTO),
   postsControllers.adminDeleteGifPost
 );
-router.get('/all_gifs/:page', authMiddleware, postsControllers.fetchAllGifs);
+router.get(
+  '/all_gifs/:page', 
+  authMiddleware,
+  validationMiddleware(fetchAllGifsSchemaDTO), 
+  postsControllers.fetchAllGifs);
 router.get(
   '/user_gifs/:creatorId/:page',
   authMiddleware,
+  validationMiddleware(fetchUserGifsSchemaDTO),
   postsControllers.fetchUserGifs
 );
-router.get('/gif/:gifId', authMiddleware, postsControllers.fetchGif);
+router.get(
+  '/gif/:gifId', 
+  authMiddleware,
+  validationMiddleware(fetchGifSchemaDTO),
+  postsControllers.fetchGif);
 router.post(
   '/likeGif/:gifId',
   authMiddleware,
@@ -54,6 +71,7 @@ router.post(
 router.get(
   '/gif_comments/:gifId/:page',
   authMiddleware,
+  validationMiddleware(fetchGifCommentSchemaDTO),
   postsControllers.fetchGifComments
 );
 router.patch(
@@ -65,12 +83,14 @@ router.patch(
 router.delete(
   '/gif/delete_comment/:commentId',
   authMiddleware,
+  validationMiddleware(deleteGifCommentSchemaDTO),
   postsControllers.deleteGifComment
 );
 router.delete(
   '/gif/admin_delete_comment/:commentId',
   authMiddleware,
   adminAuthentication,
+  validationMiddleware(deleteGifCommentSchemaDTO),
   postsControllers.adminDeleteGifComment
 );
 

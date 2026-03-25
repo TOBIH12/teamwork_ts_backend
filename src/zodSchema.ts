@@ -135,7 +135,6 @@ export const changePasswordSchemaDTO = z.object({
 // ------------------- GIF SCHEMAS --------------------
 
 // Gif POST schema validation
-
 export const postGifSchema = z.object({
   title: z.string().min(1, 'Title is required').max(100),
 });
@@ -144,9 +143,56 @@ export const postGifSchemaDTO = z.object({
   body: postGifSchema,
 });
 
+// DELETE GIF SCHEMA 
+export const deleteGifSchema = z.object({
+   gifId: z.coerce
+      .number('Invalid GIF ID')
+      .int('Invalid GIF ID')
+      .positive('Invalid GIF ID'),
+})
+
+export const deleteGifSchemaDTO = z.object({
+  params: deleteGifSchema,
+})
+
+// FETCH GIFS SCHEMAS
+export const fetchAllGifsSchemaDTO = z.object({
+  params: z.object({
+    page: z.coerce
+      .number('Invalid GIF ID')
+      .int('Invalid GIF ID')
+      .positive('Invalid GIF ID'),
+  })
+})
+
+export const fetchUserGifsSchemaDTO = z.object({
+   params: z.object({
+    creatorId:  z.coerce
+      .number('Invalid GIF ID')
+      .int('Invalid GIF ID')
+      .positive('Invalid GIF ID'),
+    page: z.coerce
+      .number('Invalid GIF ID')
+      .int('Invalid GIF ID')
+      .positive('Invalid GIF ID'),
+  })
+})
+
+export const fetchGifSchemaDTO = z.object({
+  params: z.object({
+    gifId:  z.coerce
+      .number('Invalid GIF ID')
+      .int('Invalid GIF ID')
+      .positive('Invalid GIF ID'),
+  })
+})
+
 // GIF LIKE SCHEMA
 export const gifLikeSchema = z.object({
-  gifId: z.string().min(1, 'Gif id is missing')
+  gifId: z.coerce
+      .number('Invalid GIF ID')
+      .int('Invalid GIF ID')
+      .positive('Invalid GIF ID'),
 });
 
 export const gifLikeSchemaDTO = z.object({
@@ -164,13 +210,42 @@ export const gifCommentSchema = z.object({
 export const gifCommentSchemaDTO = z.object({
   body: gifCommentSchema,
   params: z.object({
-    gifId: z.string().min(1, 'Gif id is missing')
+    gifId: z.coerce
+        .number('Invalid GIF ID')
+        .int('Invalid GIF ID')
+        .positive('Invalid GIF ID'),
   })
 });
 
+// FETCH GIF COMMENT SCHEMAS
+export const fetchGifCommentSchemaDTO = z.object({
+  params: z.object({
+    gifId: z.coerce
+        .number('Invalid GIF ID')
+        .int('Invalid GIF ID')
+        .positive('Invalid GIF ID'),
+    page: z.coerce
+        .number('Invalid GIF ID')
+        .int('Invalid GIF ID')
+        .positive('Invalid GIF ID'),
+  })
+})
+
 export const editGifCommentSchemaDTO = z.object({
   body: gifCommentSchema,
-   params: z.object({
-    commentId: z.string().min(1, 'Comment id is missing')
+  params: z.object({
+     commentId: z.coerce
+      .number('Invalid GIF ID')
+      .int('Invalid GIF ID')
+      .positive('Invalid GIF ID'),
   })
 });
+
+export const deleteGifCommentSchemaDTO = z.object({
+  params: z.object({
+      commentId: z.coerce
+        .number('Invalid GIF ID')
+        .int('Invalid GIF ID')
+        .positive('Invalid GIF ID'),
+  })
+})
