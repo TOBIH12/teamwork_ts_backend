@@ -10,6 +10,8 @@ declare global {
         userId?: string;
         page?: string;
         role?: string;
+        gifId?: string;
+        commentId: string;
       };
     }
   }
