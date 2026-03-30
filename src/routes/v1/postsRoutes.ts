@@ -14,6 +14,18 @@ import {
   fetchGifSchemaDTO,
   fetchGifCommentSchemaDTO,
   deleteGifCommentSchemaDTO,
+  postArticleSchemaDTO,
+  deleteArticleSchemaDTO,
+  fetchAllArticlesSchemaDTO,
+  fetchUserArticlesSchemaDTO,
+  editArticleSchemaDTO,
+  fetchSingleArticleSchemaDTO,
+  articleLikeSchemaDTO,
+  articleCommentSchemaDTO,
+  fetchArticleCommentSchemaDTO,
+  editArticleCommentSchemaDTO,
+  deleteArticleCommentSchemaDTO,
+  fetchAllPostsSchemaDTO,
 } from '../../zodSchema';
 import { uploadedGif } from '../../middlewares/multerMiddleware';
 
@@ -41,10 +53,11 @@ router.delete(
   postsControllers.adminDeleteGifPost
 );
 router.get(
-  '/all_gifs/:page', 
+  '/all_gifs/:page',
   authMiddleware,
-  validationMiddleware(fetchAllGifsSchemaDTO), 
-  postsControllers.fetchAllGifs);
+  validationMiddleware(fetchAllGifsSchemaDTO),
+  postsControllers.fetchAllGifs
+);
 router.get(
   '/user_gifs/:creatorId/:page',
   authMiddleware,
@@ -52,12 +65,13 @@ router.get(
   postsControllers.fetchUserGifs
 );
 router.get(
-  '/gif/:gifId', 
+  '/gif/:gifId',
   authMiddleware,
   validationMiddleware(fetchGifSchemaDTO),
-  postsControllers.fetchGif);
+  postsControllers.fetchGif
+);
 router.post(
-  '/likeGif/:gifId',
+  '/like_gif/:gifId',
   authMiddleware,
   validationMiddleware(gifLikeSchemaDTO),
   postsControllers.likeGif
@@ -92,6 +106,92 @@ router.delete(
   adminAuthentication,
   validationMiddleware(deleteGifCommentSchemaDTO),
   postsControllers.adminDeleteGifComment
+);
+router.post(
+  '/post_article',
+  authMiddleware,
+  validationMiddleware(postArticleSchemaDTO),
+  postsControllers.postArticle
+);
+router.patch(
+  '/article/edit_article/:articleId',
+  authMiddleware,
+  validationMiddleware(editArticleSchemaDTO),
+  postsControllers.editArticle
+);
+router.delete(
+  '/article/delete_article/:articleId',
+  authMiddleware,
+  validationMiddleware(deleteArticleSchemaDTO),
+  postsControllers.deleteArticle
+);
+router.delete(
+  '/article/admin_delete_article/:articleId',
+  authMiddleware,
+  adminAuthentication,
+  validationMiddleware(deleteArticleSchemaDTO),
+  postsControllers.adminDeleteArticle
+);
+router.get(
+  '/article/all_articles/:page',
+  authMiddleware,
+  validationMiddleware(fetchAllArticlesSchemaDTO),
+  postsControllers.fetchAllArticles
+);
+router.get(
+  '/article/user_articles/:creatorId/:page',
+  authMiddleware,
+  validationMiddleware(fetchUserArticlesSchemaDTO),
+  postsControllers.fetchUserArticles
+);
+router.get(
+  '/article/:articleId',
+  authMiddleware,
+  validationMiddleware(fetchSingleArticleSchemaDTO),
+  postsControllers.fetchSingleArticle
+);
+router.post(
+  '/like_article/:articleId',
+  authMiddleware,
+  validationMiddleware(articleLikeSchemaDTO),
+  postsControllers.likeArticle
+);
+router.post(
+  '/article/comment/:articleId',
+  authMiddleware,
+  validationMiddleware(articleCommentSchemaDTO),
+  postsControllers.commentOnArticle
+);
+router.get(
+  '/article_comments/:articleId/:page',
+  authMiddleware,
+  validationMiddleware(fetchArticleCommentSchemaDTO),
+  postsControllers.fetchArticleComments
+);
+router.patch(
+  '/article/edit_comment/:commentId',
+  authMiddleware,
+  validationMiddleware(editArticleCommentSchemaDTO),
+  postsControllers.editArticleComment
+);
+router.delete(
+  '/article/delete_comment/:commentId',
+  authMiddleware,
+  validationMiddleware(deleteArticleCommentSchemaDTO),
+  postsControllers.deleteArticleComment
+);
+router.delete(
+  '/article/admin_delete_comment/:commentId',
+  authMiddleware,
+  adminAuthentication,
+  validationMiddleware(deleteArticleCommentSchemaDTO),
+  postsControllers.adminDeleteArticleComment
+);
+router.get(
+  '/feed/:page',
+  authMiddleware,
+  validationMiddleware(fetchAllPostsSchemaDTO),
+  postsControllers.fetchAllPosts
 );
 
 export default router;

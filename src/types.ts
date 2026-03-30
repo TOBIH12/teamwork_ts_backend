@@ -11,6 +11,7 @@ declare global {
         page?: string;
         role?: string;
         gifId?: string;
+        articleId?: string;
         commentId: string;
       };
     }
