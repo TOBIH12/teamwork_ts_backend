@@ -90,13 +90,6 @@ export default class PostsControllers {
         creatorId,
       ]);
 
-      if (!newGifPost || !newGifPost.rows || newGifPost.rows.length === 0) {
-        return res.status(400).json({
-          status: 'error',
-          error: 'Could not create Gif post.',
-        });
-      }
-
       const { gif_id, gif_url, creator_id, created_on } = newGifPost.rows[0];
 
       return res.status(201).json({
@@ -491,7 +484,6 @@ export default class PostsControllers {
         },
       });
     } catch (err: unknown) {
-      console.log(err);
       return res
         .status(500)
         .json({ status: 'error', error: err || 'Server Error' });
@@ -742,17 +734,6 @@ export default class PostsControllers {
         creatorId,
       ]);
 
-      if (
-        !newArticlePost ||
-        !newArticlePost.rows ||
-        newArticlePost.rows.length === 0
-      ) {
-        return res.status(400).json({
-          status: 'error',
-          error: 'Could not create Article post',
-        });
-      }
-
       const { article_id, created_on, creator_id } = newArticlePost.rows[0];
 
       return res.status(201).json({
@@ -767,15 +748,14 @@ export default class PostsControllers {
         },
       });
     } catch (err: unknown) {
-      console.log(err);
       return res
         .status(500)
         .json({ status: 'error', error: err || 'Server Error' });
     }
   }
 
-  // EDIT ARTICLE
-  async editArticle(req: Request, res: Response): Promise<Response> {
+  // UPDATE ARTICLE
+  async updateArticle(req: Request, res: Response): Promise<Response> {
     try {
       const { title, content } = req.body;
       const { articleId } = req.params;
@@ -833,7 +813,6 @@ export default class PostsControllers {
         },
       });
     } catch (err: unknown) {
-      console.log(err);
       return res
         .status(500)
         .json({ status: 'error', error: err || 'Server Error' });
@@ -893,7 +872,6 @@ export default class PostsControllers {
         },
       });
     } catch (err: unknown) {
-      console.log(err);
       return res
         .status(500)
         .json({ status: 'error', error: err || 'Server Error' });
@@ -943,7 +921,6 @@ export default class PostsControllers {
         },
       });
     } catch (err: unknown) {
-      console.log(err);
       return res
         .status(500)
         .json({ status: 'error', error: err || 'Server Error' });
@@ -978,7 +955,6 @@ export default class PostsControllers {
         },
       });
     } catch (err: unknown) {
-      console.log(err);
       return res
         .status(500)
         .json({ status: 'error', error: err || 'Server Error' });
@@ -1039,7 +1015,6 @@ export default class PostsControllers {
         },
       });
     } catch (err: unknown) {
-      console.log(err);
       return res
         .status(500)
         .json({ status: 'error', error: err || 'Server Error' });
@@ -1082,7 +1057,6 @@ export default class PostsControllers {
         },
       });
     } catch (err: unknown) {
-      console.log(err);
       return res
         .status(500)
         .json({ status: 'error', error: err || 'Server Error' });
@@ -1190,7 +1164,6 @@ export default class PostsControllers {
         },
       });
     } catch (err: unknown) {
-      console.log(err);
       return res
         .status(500)
         .json({ status: 'error', error: err || 'Server Error' });
@@ -1264,7 +1237,6 @@ export default class PostsControllers {
         },
       });
     } catch (err: unknown) {
-      console.log(err);
       return res
         .status(500)
         .json({ status: 'error', error: err || 'Server Error' });
@@ -1333,7 +1305,6 @@ export default class PostsControllers {
         },
       });
     } catch (err: unknown) {
-      console.log(err);
       return res
         .status(500)
         .json({ status: 'error', error: err || 'Server Error' });
@@ -1398,7 +1369,6 @@ export default class PostsControllers {
         },
       });
     } catch (err: unknown) {
-      console.log(err);
       return res
         .status(500)
         .json({ status: 'error', error: err || 'Server Error' });
@@ -1459,7 +1429,6 @@ export default class PostsControllers {
         },
       });
     } catch (err: unknown) {
-      console.log(err);
       return res
         .status(500)
         .json({ status: 'error', error: err || 'Server Error' });
@@ -1513,7 +1482,6 @@ export default class PostsControllers {
         },
       });
     } catch (err: unknown) {
-      console.log(err);
       return res
         .status(500)
         .json({ status: 'error', error: err || 'Server Error' });
@@ -1559,7 +1527,6 @@ export default class PostsControllers {
         },
       });
     } catch (err: unknown) {
-      console.log(err);
       return res
         .status(500)
         .json({ status: 'error', error: err || 'Server Error' });

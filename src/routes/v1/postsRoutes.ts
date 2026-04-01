@@ -117,7 +117,7 @@ router.patch(
   '/article/edit_article/:articleId',
   authMiddleware,
   validationMiddleware(editArticleSchemaDTO),
-  postsControllers.editArticle
+  postsControllers.updateArticle
 );
 router.delete(
   '/article/delete_article/:articleId',
