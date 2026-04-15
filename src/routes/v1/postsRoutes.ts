@@ -188,7 +188,7 @@ router.delete(
   postsControllers.adminDeleteArticleComment
 );
 router.get(
-  '/feed/:page',
+  '/feed',
   authMiddleware,
   validationMiddleware(fetchAllPostsSchemaDTO),
   postsControllers.fetchAllPosts

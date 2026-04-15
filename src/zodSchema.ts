@@ -385,7 +385,7 @@ export const deleteArticleCommentSchemaDTO = z.object({
 });
 
 export const fetchAllPostsSchemaDTO = z.object({
-  params: z.object({
+  query: z.object({
     page: z.coerce
       .number('Invalid page')
       .int('Invalid page')

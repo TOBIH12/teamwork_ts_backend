@@ -1491,8 +1491,8 @@ export default class PostsControllers {
   // FETCH ALL POSTS (ARTICLES + GIFS)
   async fetchAllPosts(req: Request, res: Response): Promise<Response> {
     try {
-      const page = Number.parseInt(req.params.page, 10);
-      const limit = 15;
+      const page = Number.parseInt(req.query.page as string, 10) || 1;
+      const limit = Number.parseInt(req.query.limit as string, 10) || 10;
 
       const offset = (page - 1) * limit;
 
