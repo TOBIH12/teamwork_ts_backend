@@ -157,11 +157,15 @@ export const deleteGifSchemaDTO = z.object({
 
 // FETCH GIFS SCHEMAS
 export const fetchAllGifsSchemaDTO = z.object({
-  params: z.object({
+  query: z.object({
     page: z.coerce
       .number('Invalid page')
       .int('Invalid page')
       .positive('Invalid page'),
+    limit: z.coerce
+      .number('Invalid limit')
+      .int('Invalid limit')
+      .positive('Invalid limit'),
   }),
 });
 
@@ -288,10 +292,14 @@ export const fetchAllArticlesSchema = z.object({
     .number('Invalid page')
     .int('Invalid page')
     .positive('Invalid page'),
+  limit: z.coerce
+    .number('Invalid limit')
+    .int('Invalid limit')
+    .positive('Invalid limit'),
 });
 
 export const fetchAllArticlesSchemaDTO = z.object({
-  params: fetchAllArticlesSchema,
+  query: fetchAllArticlesSchema,
 });
 
 export const fetchUserArticlesSchema = z.object({

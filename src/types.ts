@@ -14,6 +14,10 @@ declare global {
         articleId?: string;
         commentId: string;
       };
+      query?: {
+        page?: string;
+        limit?: string;
+      };
     }
   }
 }

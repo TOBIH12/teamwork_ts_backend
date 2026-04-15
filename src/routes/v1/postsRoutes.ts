@@ -53,7 +53,7 @@ router.delete(
   postsControllers.adminDeleteGifPost
 );
 router.get(
-  '/all_gifs/:page',
+  '/all_gifs',
   authMiddleware,
   validationMiddleware(fetchAllGifsSchemaDTO),
   postsControllers.fetchAllGifs
@@ -133,7 +133,7 @@ router.delete(
   postsControllers.adminDeleteArticle
 );
 router.get(
-  '/article/all_articles/:page',
+  '/article/all_articles',
   authMiddleware,
   validationMiddleware(fetchAllArticlesSchemaDTO),
   postsControllers.fetchAllArticles

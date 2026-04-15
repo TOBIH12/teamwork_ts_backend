@@ -331,7 +331,7 @@ describe('Fetch All Articles Endpoint', () => {
 
   it('should fetch all available articles successfully', async () => {
     const res = await request(app)
-      .get('/api/v1/posts/article/all_articles/1')
+      .get('/api/v1/posts/article/all_articles?page=1&limit=10')
       .set('Authorization', `Bearer ${token}`);
     expect(res.status).to.equal(200);
     expect(res.body).to.be.an('object');
@@ -349,7 +349,9 @@ describe('Fetch All Articles Endpoint', () => {
   });
 
   it('should return 401 for unauthorized access', async () => {
-    const res = await request(app).get('/api/v1/posts/article/all_articles/1');
+    const res = await request(app).get(
+      '/api/v1/posts/article/all_articles?page=1&limit=10'
+    );
     expect(res.status).to.equal(401);
     expect(res.body).to.be.an('object');
     expect(res.body).to.have.property('status', 'error');
