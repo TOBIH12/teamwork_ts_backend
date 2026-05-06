@@ -464,13 +464,8 @@ export default class PostsControllers {
         });
       }
 
-      const {
-        comment_id,
-        comment_text,
-        commented_at,
-        commenter_id,
-        commented_gif_id,
-      } = postedComment.rows[0];
+      const { comment_id, comment_text, created_at, user_id, gif_id } =
+        postedComment.rows[0];
 
       return res.status(201).json({
         status: 'success',
@@ -478,9 +473,9 @@ export default class PostsControllers {
           message: 'comment posted!',
           commentId: comment_id,
           comment: comment_text,
-          createdOn: commented_at,
-          createdBy: commenter_id,
-          gifId: commented_gif_id,
+          createdOn: created_at,
+          createdBy: user_id,
+          gifId: gif_id,
         },
       });
     } catch (err: unknown) {
@@ -574,17 +569,23 @@ export default class PostsControllers {
         });
       }
 
-      const { commenter_id } = checkComment.rows[0];
+      const { user_id } = checkComment.rows[0];
 
-      if (req.user?.user_id !== commenter_id) {
+      if (req.user?.user_id !== user_id) {
         return res.status(403).json({
           status: 'error',
           error: 'Forbidden.',
         });
       }
 
+      const currentTimeInMilliseconds = Date.now();
+      const dbFormatCurrentTime = new Date(
+        currentTimeInMilliseconds
+      ).toISOString();
+
       const updatedComment = await pool.query(editGifCommentQuery, [
         comment,
+        dbFormatCurrentTime,
         parsedCommentId,
       ]);
 
@@ -638,9 +639,9 @@ export default class PostsControllers {
         });
       }
 
-      const { commenter_id } = checkComment.rows[0];
+      const { user_id } = checkComment.rows[0];
 
-      if (req.user?.user_id !== commenter_id) {
+      if (req.user?.user_id !== user_id) {
         return res.status(403).json({
           status: 'error',
           error: 'Forbidden.',
@@ -1217,13 +1218,8 @@ export default class PostsControllers {
         });
       }
 
-      const {
-        comment_id,
-        comment_text,
-        commented_at,
-        commenter_id,
-        commented_article_id,
-      } = commentResponse.rows[0];
+      const { comment_id, comment_text, created_at, user_id, article_id } =
+        commentResponse.rows[0];
 
       return res.status(201).json({
         status: 'success',
@@ -1231,9 +1227,9 @@ export default class PostsControllers {
           message: 'comment posted!',
           commentId: comment_id,
           comment: comment_text,
-          commentedAt: commented_at,
-          commenterId: commenter_id,
-          articleId: commented_article_id,
+          createdAt: created_at,
+          userId: user_id,
+          articleId: article_id,
         },
       });
     } catch (err: unknown) {
@@ -1333,17 +1329,23 @@ export default class PostsControllers {
         });
       }
 
-      const { commenter_id } = checkComment.rows[0];
+      const { user_id } = checkComment.rows[0];
 
-      if (commenter_id !== reqUserId) {
+      if (user_id !== reqUserId) {
         return res.status(403).json({
           status: 'error',
           error: 'Forbidden.',
         });
       }
 
+      const currentTimeInMilliseconds = Date.now();
+      const dbFormatCurrentTime = new Date(
+        currentTimeInMilliseconds
+      ).toISOString();
+
       const editCommentResponse = await pool.query(editArticleCommentQuery, [
         comment,
+        dbFormatCurrentTime,
         commentId,
       ]);
 
@@ -1358,7 +1360,8 @@ export default class PostsControllers {
         });
       }
 
-      const { comment_id, comment_text } = editCommentResponse.rows[0];
+      const { comment_id, comment_text, updated_at } =
+        editCommentResponse.rows[0];
 
       return res.status(200).json({
         status: 'success',
@@ -1366,6 +1369,7 @@ export default class PostsControllers {
           message: 'comment updated!',
           commentId: comment_id,
           comment: comment_text,
+          updatedAt: updated_at,
         },
       });
     } catch (err: unknown) {
@@ -1397,9 +1401,9 @@ export default class PostsControllers {
         });
       }
 
-      const { commenter_id } = checkComment.rows[0];
+      const { user_id } = checkComment.rows[0];
 
-      if (commenter_id !== reqUserId) {
+      if (user_id !== reqUserId) {
         return res.status(403).json({
           status: 'error',
           error: 'Forbidden.',
