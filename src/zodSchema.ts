@@ -143,56 +143,60 @@ export const postGifSchemaDTO = z.object({
   body: postGifSchema,
 });
 
-// DELETE GIF SCHEMA 
+// DELETE GIF SCHEMA
 export const deleteGifSchema = z.object({
-   gifId: z.coerce
-      .number('Invalid GIF ID')
-      .int('Invalid GIF ID')
-      .positive('Invalid GIF ID'),
-})
+  gifId: z.coerce
+    .number('Invalid GIF ID')
+    .int('Invalid GIF ID')
+    .positive('Invalid GIF ID'),
+});
 
 export const deleteGifSchemaDTO = z.object({
   params: deleteGifSchema,
-})
+});
 
 // FETCH GIFS SCHEMAS
 export const fetchAllGifsSchemaDTO = z.object({
-  params: z.object({
+  query: z.object({
     page: z.coerce
-      .number('Invalid GIF ID')
-      .int('Invalid GIF ID')
-      .positive('Invalid GIF ID'),
-  })
-})
+      .number('Invalid page')
+      .int('Invalid page')
+      .positive('Invalid page'),
+    limit: z.coerce
+      .number('Invalid limit')
+      .int('Invalid limit')
+      .positive('Invalid limit'),
+  }),
+});
 
 export const fetchUserGifsSchemaDTO = z.object({
-   params: z.object({
-    creatorId:  z.coerce
-      .number('Invalid GIF ID')
-      .int('Invalid GIF ID')
-      .positive('Invalid GIF ID'),
+  params: z.object({
+    creatorId: z.coerce
+      .number('Invalid creator ID')
+      .int('Invalid creator ID')
+      .positive('Invalid creator ID'),
     page: z.coerce
-      .number('Invalid GIF ID')
-      .int('Invalid GIF ID')
-      .positive('Invalid GIF ID'),
-  })
-})
+      .number('Invalid page')
+      .int('Invalid page')
+      .positive('Invalid page'),
+  }),
+});
 
 export const fetchGifSchemaDTO = z.object({
   params: z.object({
-    gifId:  z.coerce
+    gifId: z.coerce
       .number('Invalid GIF ID')
       .int('Invalid GIF ID')
       .positive('Invalid GIF ID'),
-  })
-})
+  }),
+});
 
 // GIF LIKE SCHEMA
 export const gifLikeSchema = z.object({
   gifId: z.coerce
-      .number('Invalid GIF ID')
-      .int('Invalid GIF ID')
-      .positive('Invalid GIF ID'),
+    .number('Invalid GIF ID')
+    .int('Invalid GIF ID')
+    .positive('Invalid GIF ID'),
 });
 
 export const gifLikeSchemaDTO = z.object({
@@ -211,41 +215,180 @@ export const gifCommentSchemaDTO = z.object({
   body: gifCommentSchema,
   params: z.object({
     gifId: z.coerce
-        .number('Invalid GIF ID')
-        .int('Invalid GIF ID')
-        .positive('Invalid GIF ID'),
-  })
+      .number('Invalid GIF ID')
+      .int('Invalid GIF ID')
+      .positive('Invalid GIF ID'),
+  }),
 });
 
 // FETCH GIF COMMENT SCHEMAS
 export const fetchGifCommentSchemaDTO = z.object({
   params: z.object({
     gifId: z.coerce
-        .number('Invalid GIF ID')
-        .int('Invalid GIF ID')
-        .positive('Invalid GIF ID'),
+      .number('Invalid GIF ID')
+      .int('Invalid GIF ID')
+      .positive('Invalid GIF ID'),
     page: z.coerce
-        .number('Invalid GIF ID')
-        .int('Invalid GIF ID')
-        .positive('Invalid GIF ID'),
-  })
-})
+      .number('Invalid page')
+      .int('Invalid page')
+      .positive('Invalid page'),
+  }),
+});
 
 export const editGifCommentSchemaDTO = z.object({
   body: gifCommentSchema,
   params: z.object({
-     commentId: z.coerce
-      .number('Invalid GIF ID')
-      .int('Invalid GIF ID')
-      .positive('Invalid GIF ID'),
-  })
+    commentId: z.coerce
+      .number('Invalid comment ID')
+      .int('Invalid comment ID')
+      .positive('Invalid comment ID'),
+  }),
 });
 
 export const deleteGifCommentSchemaDTO = z.object({
   params: z.object({
-      commentId: z.coerce
-        .number('Invalid GIF ID')
-        .int('Invalid GIF ID')
-        .positive('Invalid GIF ID'),
-  })
-})
+    commentId: z.coerce
+      .number('Invalid comment ID')
+      .int('Invalid comment ID')
+      .positive('Invalid comment ID'),
+  }),
+});
+
+// ARTICLES SCHEMAS
+export const postArticleSchema = z.object({
+  title: z.string().min(1, 'Title is required').max(100),
+  content: z.string().min(1, 'Content is required').max(800),
+});
+
+export const postArticleSchemaDTO = z.object({
+  body: postArticleSchema,
+});
+
+// EDIT ARTICLE SCHEMA
+export const editArticleSchemaDTO = z.object({
+  body: postArticleSchema,
+  params: z.object({
+    articleId: z.coerce
+      .number('Invalid article ID')
+      .int('Invalid article ID')
+      .positive('Invalid article ID'),
+  }),
+});
+
+// DELETE ARTICLE SCHEMA
+export const deleteArticleSchema = z.object({
+  articleId: z.coerce
+    .number('Invalid ARTICLE ID')
+    .int('Invalid ARTICLE ID')
+    .positive('Invalid ARTICLE ID'),
+});
+
+export const deleteArticleSchemaDTO = z.object({
+  params: deleteArticleSchema,
+});
+
+export const fetchAllArticlesSchema = z.object({
+  page: z.coerce
+    .number('Invalid page')
+    .int('Invalid page')
+    .positive('Invalid page'),
+  limit: z.coerce
+    .number('Invalid limit')
+    .int('Invalid limit')
+    .positive('Invalid limit'),
+});
+
+export const fetchAllArticlesSchemaDTO = z.object({
+  query: fetchAllArticlesSchema,
+});
+
+export const fetchUserArticlesSchema = z.object({
+  creatorId: z.coerce
+    .number('Invalid creator id')
+    .int('Invalid creator id')
+    .positive('Invalid creator id'),
+  page: z.coerce
+    .number('Invalid page')
+    .int('Invalid page')
+    .positive('Invalid page'),
+});
+
+export const fetchUserArticlesSchemaDTO = z.object({
+  params: fetchUserArticlesSchema,
+});
+
+export const fetchSingleArticleSchemaDTO = z.object({
+  params: z.object({
+    articleId: z.coerce
+      .number('Invalid article ID')
+      .int('Invalid article ID')
+      .positive('Invalid article ID'),
+  }),
+});
+
+export const articleLikeSchemaDTO = z.object({
+  params: z.object({
+    articleId: z.coerce
+      .number('Invalid article ID')
+      .int('Invalid article ID')
+      .positive('Invalid article ID'),
+  }),
+});
+
+export const articleCommentSchema = z.object({
+  comment: z
+    .string()
+    .min(1, 'Comment cannot be empty')
+    .max(500, 'Comment is too long'),
+});
+
+export const articleCommentSchemaDTO = z.object({
+  body: articleCommentSchema,
+  params: z.object({
+    articleId: z.coerce
+      .number('Invalid article ID')
+      .int('Invalid article ID')
+      .positive('Invalid article ID'),
+  }),
+});
+
+export const fetchArticleCommentSchemaDTO = z.object({
+  params: z.object({
+    articleId: z.coerce
+      .number('Invalid article ID')
+      .int('Invalid article ID')
+      .positive('Invalid article ID'),
+    page: z.coerce
+      .number('Invalid page')
+      .int('Invalid page')
+      .positive('Invalid page'),
+  }),
+});
+
+export const editArticleCommentSchemaDTO = z.object({
+  body: articleCommentSchema,
+  params: z.object({
+    commentId: z.coerce
+      .number('Invalid comment ID')
+      .int('Invalid comment ID')
+      .positive('Invalid comment ID'),
+  }),
+});
+
+export const deleteArticleCommentSchemaDTO = z.object({
+  params: z.object({
+    commentId: z.coerce
+      .number('Invalid comment ID')
+      .int('Invalid comment ID')
+      .positive('Invalid comment ID'),
+  }),
+});
+
+export const fetchAllPostsSchemaDTO = z.object({
+  query: z.object({
+    page: z.coerce
+      .number('Invalid page')
+      .int('Invalid page')
+      .positive('Invalid page'),
+  }),
+});

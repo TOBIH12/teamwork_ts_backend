@@ -72,10 +72,7 @@ describe('Post GIFS Endpoint', () => {
     expect(res.status).to.equal(201);
     expect(res.body).to.have.property('status', 'success');
     expect(res.body.data).to.have.property('gifId');
-    expect(res.body.data).to.have.property(
-      'message',
-      'GIF post created successfully'
-    );
+    expect(res.body.data).to.have.property('message', 'GIF posted!');
     expect(res.body.data).to.have.property('createdOn');
     expect(res.body.data).to.have.property('title', 'Funny Dog');
     expect(res.body.data).to.have.property('gifUrl');
@@ -257,7 +254,7 @@ describe('Fetch all Gifs endpoint', () => {
 
   it('should fetch all gifs successfully', async () => {
     const res = await request(app)
-      .get('/api/v1/posts/all_gifs/1')
+      .get('/api/v1/posts/all_gifs?page=1&limit=10')
       .set('Authorization', `Bearer ${token}`);
     expect(res.status).to.equal(200);
     expect(res.body).to.be.an('object');
@@ -275,7 +272,9 @@ describe('Fetch all Gifs endpoint', () => {
   });
 
   it('should return error 401 for unauthorized access', async () => {
-    const res = await request(app).get('/api/v1/posts/all_gifs/1');
+    const res = await request(app).get(
+      '/api/v1/posts/all_gifs?page=1&limit=10'
+    );
     expect(res.status).to.equal(401);
     expect(res.body).to.be.an('object');
     expect(res.body).to.have.property('status', 'error');
@@ -341,7 +340,10 @@ describe('Fetch User Gifs Endpoint', () => {
     expect(res.status).to.equal(200);
     expect(res.body).to.be.an('object');
     expect(res.body).to.have.property('status', 'success');
-    expect(res.body.data).to.have.property('message', `No Gifs yet`);
+    expect(res.body.data).to.have.property(
+      'message',
+      `No Gifs from this user yet`
+    );
   });
 
   it(`it should return error 404 for user not found`, async () => {
@@ -413,7 +415,7 @@ describe('Like Gif Post endpoint', () => {
 
   it('should like a gif post successfully', async () => {
     const res = await request(app)
-      .post('/api/v1/posts/likeGif/4')
+      .post('/api/v1/posts/like_gif/4')
       .set('Authorization', `Bearer ${token}`);
     expect(res.status).to.equal(201);
     expect(res.body).to.have.property('status', 'success');
@@ -423,7 +425,7 @@ describe('Like Gif Post endpoint', () => {
 
   it('should unlike a gif post successfully', async () => {
     const res = await request(app)
-      .post('/api/v1/posts/likeGif/4')
+      .post('/api/v1/posts/like_gif/4')
       .set('Authorization', `Bearer ${token}`);
     expect(res.status).to.equal(200);
     expect(res.body).to.have.property('status', 'success');
@@ -433,7 +435,7 @@ describe('Like Gif Post endpoint', () => {
 
   it('should return error 404 for nonexisting gif post', async () => {
     const res = await request(app)
-      .post('/api/v1/posts/likeGif/7')
+      .post('/api/v1/posts/like_gif/7')
       .set('Authorization', `Bearer ${token}`);
     expect(res.status).to.equal(404);
     expect(res.body).to.have.property('status', 'error');

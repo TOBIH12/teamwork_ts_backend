@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import dotenv from 'dotenv';
 import z from 'zod';
 import pool from '../../db';
-import { postGifSchema } from '../../zodSchema';
+import { postGifSchema, postArticleSchema } from '../../zodSchema';
 import {
   handleCloudinaryUpload,
   handleCloudinaryFileDelete,
@@ -25,12 +25,33 @@ import {
   fetchSingleGifCommentQuery,
   getGifCommentsCountQuery,
   deleteGifPostQuery,
+  insertArticlePostQuery,
+  fetchArticleById,
+  deleteArticlePostQuery,
+  getArticlesCount,
+  fetchAllArticlesQuery,
+  getUserArticlesCount,
+  fetchUserArticlesQuery,
+  editArticleQuery,
+  fetchArticleLikes,
+  removeArticleLikeQuery,
+  getArticleLikesCountQuery,
+  likeArticleQuery,
+  commentOnArticleQuery,
+  fetchArticleCommentsQuery,
+  getArticleCommentsCountQuery,
+  fetchSingleArticleCommentQuery,
+  editArticleCommentQuery,
+  deleteArticleCommentQuery,
+  fetchAllPostsQuery,
+  getAllArticlesAndGifsCountQuery,
 } from '../../queries/posts.queries';
 import { fetchUserByIdQuery } from '../../queries/users.queries';
 
 dotenv.config();
 
 type PostGifInput = z.infer<typeof postGifSchema>;
+type PostArticleInput = z.infer<typeof postArticleSchema>;
 
 export default class PostsControllers {
   // Create GIF Post
@@ -52,7 +73,7 @@ export default class PostsControllers {
       const b64 = Buffer.from(gif.buffer).toString('base64');
       const dataURI = `data:${gif.mimetype};base64,${b64}`;
 
-      const gifUrl = await handleCloudinaryUpload(dataURI, "gifs");
+      const gifUrl = await handleCloudinaryUpload(dataURI, 'gifs');
 
       if (!gifUrl || !gifUrl.secure_url) {
         return res.status(500).json({
@@ -69,17 +90,17 @@ export default class PostsControllers {
         creatorId,
       ]);
 
-      const { gif_id, created_on } = newGifPost.rows[0];
+      const { gif_id, gif_url, creator_id, created_on } = newGifPost.rows[0];
 
       return res.status(201).json({
         status: 'success',
         data: {
+          message: 'GIF posted!',
           gifId: gif_id,
-          message: 'GIF post created successfully',
           createdOn: created_on,
-          title: newGifPost.rows[0].title,
-          gifUrl: newGifPost.rows[0].gif_url,
-          authorId: newGifPost.rows[0].creator_id,
+          title,
+          gifUrl: gif_url,
+          authorId: creator_id,
         },
       });
     } catch (err: unknown) {
@@ -95,7 +116,7 @@ export default class PostsControllers {
       const { gifId } = req.params;
       const reqUserId = req.user?.user_id;
 
-      const parsedGifId = Number.parseInt(gifId, 10)
+      const parsedGifId = Number.parseInt(gifId, 10);
 
       const checkGif = await pool.query(fetchGifById, [parsedGifId]);
 
@@ -144,7 +165,7 @@ export default class PostsControllers {
     try {
       const { gifId } = req.params;
 
-      const parsedGifId = Number.parseInt(gifId, 10)
+      const parsedGifId = Number.parseInt(gifId, 10);
 
       const checkGif = await pool.query(fetchGifById, [parsedGifId]);
 
@@ -184,8 +205,8 @@ export default class PostsControllers {
   // FETCH all GIFS
   async fetchAllGifs(req: Request, res: Response): Promise<Response> {
     try {
-      const page = Number.parseInt(req.params.page, 10);
-      const limit = 10;
+      const page = Number.parseInt(req.query.page as string, 10) || 1;
+      const limit = Number.parseInt(req.query.limit as string, 10) || 10;
 
       const offset = (page - 1) * limit;
 
@@ -236,7 +257,7 @@ export default class PostsControllers {
 
       const gifsCountResult = await pool.query(getUserGifsCount, [creatorId]);
       const totalUserGifsCount = gifsCountResult.rows[0].user_gifs_count;
-      const parsedGifsCount = Number.parseInt(totalUserGifsCount, 10)
+      const parsedGifsCount = Number.parseInt(totalUserGifsCount, 10);
 
       const gifsResponse = await pool.query(fetchUserGifs, [
         creatorId,
@@ -250,7 +271,7 @@ export default class PostsControllers {
         return res.status(200).json({
           status: 'success',
           data: {
-            message: `No Gifs yet`,
+            message: `No Gifs from this user yet`,
           },
         });
       }
@@ -275,7 +296,7 @@ export default class PostsControllers {
     try {
       const { gifId } = req.params;
 
-       const parsedGifId = Number.parseInt(gifId, 10)
+      const parsedGifId = Number.parseInt(gifId, 10);
 
       const gifResponse = await pool.query(fetchGifById, [parsedGifId]);
 
@@ -308,10 +329,10 @@ export default class PostsControllers {
   // LIKE GIF
   async likeGif(req: Request, res: Response): Promise<Response> {
     try {
-      const {gifId} = req.params;
+      const { gifId } = req.params;
       const likeCreatorId = req.user?.user_id;
 
-       const parsedGifId = Number.parseInt(gifId, 10)
+      const parsedGifId = Number.parseInt(gifId, 10);
 
       const checkGif = await pool.query(fetchGifById, [parsedGifId]);
 
@@ -327,7 +348,10 @@ export default class PostsControllers {
         currentTimeInMilliseconds
       ).toISOString();
 
-      const hasLike = await pool.query(fetchGifLike, [likeCreatorId, parsedGifId]);
+      const hasLike = await pool.query(fetchGifLike, [
+        likeCreatorId,
+        parsedGifId,
+      ]);
 
       if (hasLike.rows.length !== 0) {
         await pool.query(removeGifLikeQuery, [likeCreatorId, parsedGifId]);
@@ -344,7 +368,7 @@ export default class PostsControllers {
         }
 
         const gifLikeCount = getGifLikesCount.rows[0].gif_likes_count;
-        const parsedGifLikeCount = Number.parseInt(gifLikeCount, 10)
+        const parsedGifLikeCount = Number.parseInt(gifLikeCount, 10);
 
         return res.status(200).json({
           status: 'success',
@@ -370,7 +394,9 @@ export default class PostsControllers {
 
       const { liked_at } = likeGif.rows[0];
 
-      const getGifLikesCount = await pool.query(getGifLikesCountQuery, [parsedGifId]);
+      const getGifLikesCount = await pool.query(getGifLikesCountQuery, [
+        parsedGifId,
+      ]);
 
       if (!getGifLikesCount.rows[0].gif_likes_count) {
         return res.status(404).json({
@@ -438,13 +464,8 @@ export default class PostsControllers {
         });
       }
 
-      const {
-        comment_id,
-        comment_text,
-        commented_at,
-        commenter_id,
-        commented_gif_id,
-      } = postedComment.rows[0];
+      const { comment_id, comment_text, created_at, user_id, gif_id } =
+        postedComment.rows[0];
 
       return res.status(201).json({
         status: 'success',
@@ -452,13 +473,12 @@ export default class PostsControllers {
           message: 'comment posted!',
           commentId: comment_id,
           comment: comment_text,
-          createdOn: commented_at,
-          createdBy: commenter_id,
-          gifId: commented_gif_id,
+          createdOn: created_at,
+          createdBy: user_id,
+          gifId: gif_id,
         },
       });
     } catch (err: unknown) {
-      console.log(err)
       return res
         .status(500)
         .json({ status: 'error', error: err || 'Server Error' });
@@ -500,7 +520,7 @@ export default class PostsControllers {
       const totalGifCommentsCount = gifCommentsCount.rows[0].comments_count;
       const parsedCommentsCount = Number.parseInt(totalGifCommentsCount, 10);
 
-      if (comments.length === 0) {
+      if (page === 1 && comments.length === 0) {
         return res.status(200).json({
           status: 'success',
           data: {
@@ -515,7 +535,7 @@ export default class PostsControllers {
         status: 'success',
         data: {
           message: 'comments fetched successfully',
-          commentsCount: parsedCommentsCount, 
+          commentsCount: parsedCommentsCount,
           comments,
         },
       });
@@ -549,17 +569,23 @@ export default class PostsControllers {
         });
       }
 
-      const { commenter_id } = checkComment.rows[0];
+      const { user_id } = checkComment.rows[0];
 
-      if (req.user?.user_id !== commenter_id) {
+      if (req.user?.user_id !== user_id) {
         return res.status(403).json({
           status: 'error',
           error: 'Forbidden.',
         });
       }
 
+      const currentTimeInMilliseconds = Date.now();
+      const dbFormatCurrentTime = new Date(
+        currentTimeInMilliseconds
+      ).toISOString();
+
       const updatedComment = await pool.query(editGifCommentQuery, [
         comment,
+        dbFormatCurrentTime,
         parsedCommentId,
       ]);
 
@@ -613,9 +639,9 @@ export default class PostsControllers {
         });
       }
 
-      const { commenter_id } = checkComment.rows[0];
+      const { user_id } = checkComment.rows[0];
 
-      if (req.user?.user_id !== commenter_id) {
+      if (req.user?.user_id !== user_id) {
         return res.status(403).json({
           status: 'error',
           error: 'Forbidden.',
@@ -683,6 +709,825 @@ export default class PostsControllers {
         status: 'success',
         data: {
           message: 'comment deleted',
+        },
+      });
+    } catch (err: unknown) {
+      return res
+        .status(500)
+        .json({ status: 'error', error: err || 'Server Error' });
+    }
+  }
+
+  // ARTICLE CONTROLLERS
+
+  // POST ARTICLE
+  async postArticle(
+    req: Request<PostArticleInput>,
+    res: Response
+  ): Promise<Response> {
+    try {
+      const { title, content } = req.body;
+      const creatorId = req.user?.user_id;
+
+      const newArticlePost = await pool.query(insertArticlePostQuery, [
+        title,
+        content,
+        creatorId,
+      ]);
+
+      const { article_id, created_on, creator_id } = newArticlePost.rows[0];
+
+      return res.status(201).json({
+        status: 'success',
+        data: {
+          message: 'Article posted!',
+          articleId: article_id,
+          title,
+          content,
+          createdOn: created_on,
+          creatorId: creator_id,
+        },
+      });
+    } catch (err: unknown) {
+      return res
+        .status(500)
+        .json({ status: 'error', error: err || 'Server Error' });
+    }
+  }
+
+  // UPDATE ARTICLE
+  async updateArticle(req: Request, res: Response): Promise<Response> {
+    try {
+      const { title, content } = req.body;
+      const { articleId } = req.params;
+      const parsedArticleId = Number.parseInt(articleId, 10);
+      const reqUserId = req.user?.user_id;
+
+      const checkArticle = await pool.query(fetchArticleById, [
+        parsedArticleId,
+      ]);
+
+      if (
+        !checkArticle ||
+        !checkArticle.rows ||
+        checkArticle.rows.length === 0
+      ) {
+        return res.status(404).json({
+          status: 'error',
+          error: 'article might have been deleted or does not exist.',
+        });
+      }
+
+      const { creator_id } = checkArticle.rows[0];
+
+      if (reqUserId !== creator_id) {
+        return res.status(403).json({
+          status: 'error',
+          error: `Forbidden.`,
+        });
+      }
+
+      const updatedArticle = await pool.query(editArticleQuery, [
+        title,
+        content,
+        parsedArticleId,
+      ]);
+
+      if (
+        !updatedArticle ||
+        !updatedArticle.rows ||
+        updatedArticle.rows.length === 0
+      ) {
+        return res.status(400).json({
+          status: 'error',
+          error: 'Failed to update, try again.',
+        });
+      }
+
+      return res.status(200).json({
+        status: 'success',
+        data: {
+          message: 'update successful.',
+          articleId,
+          title,
+          content,
+        },
+      });
+    } catch (err: unknown) {
+      return res
+        .status(500)
+        .json({ status: 'error', error: err || 'Server Error' });
+    }
+  }
+
+  // DELETE ARTICLE
+  async deleteArticle(req: Request, res: Response): Promise<Response> {
+    try {
+      const { articleId } = req.params;
+      const parsedArticleId = Number.parseInt(articleId, 10);
+      const reqUserId = req.user?.user_id;
+
+      const checkArticle = await pool.query(fetchArticleById, [
+        parsedArticleId,
+      ]);
+
+      if (
+        !checkArticle ||
+        !checkArticle.rows ||
+        checkArticle.rows.length === 0
+      ) {
+        return res.status(404).json({
+          status: 'error',
+          error: 'article might have been deleted or does not exist.',
+        });
+      }
+
+      const { creator_id } = checkArticle.rows[0];
+
+      if (reqUserId !== creator_id) {
+        return res.status(403).json({
+          status: 'error',
+          error: `Forbidden.`,
+        });
+      }
+
+      const deletedArticle = await pool.query(deleteArticlePostQuery, [
+        parsedArticleId,
+      ]);
+
+      if (
+        !deletedArticle ||
+        !deletedArticle.rows ||
+        deletedArticle.rows.length === 0
+      ) {
+        return res.status(500).json({
+          status: 'error',
+          error: 'unable to delete article, please retry later',
+        });
+      }
+
+      return res.status(200).json({
+        status: 'success',
+        data: {
+          message: 'post deleted.',
+        },
+      });
+    } catch (err: unknown) {
+      return res
+        .status(500)
+        .json({ status: 'error', error: err || 'Server Error' });
+    }
+  }
+
+  // ADMIN DELETE ARTICLE
+  async adminDeleteArticle(req: Request, res: Response): Promise<Response> {
+    try {
+      const { articleId } = req.params;
+      const parsedArticleId = Number.parseInt(articleId, 10);
+
+      const checkArticle = await pool.query(fetchArticleById, [
+        parsedArticleId,
+      ]);
+
+      if (
+        !checkArticle ||
+        !checkArticle.rows ||
+        checkArticle.rows.length === 0
+      ) {
+        return res.status(404).json({
+          status: 'error',
+          error: 'article might have been deleted or does not exist.',
+        });
+      }
+
+      const deletedArticle = await pool.query(deleteArticlePostQuery, [
+        parsedArticleId,
+      ]);
+
+      if (
+        !deletedArticle ||
+        !deletedArticle.rows ||
+        deletedArticle.rows.length === 0
+      ) {
+        return res.status(500).json({
+          status: 'error',
+          error: 'unable to delete article, please retry later',
+        });
+      }
+
+      return res.status(200).json({
+        status: 'success',
+        data: {
+          message: 'post deleted.',
+        },
+      });
+    } catch (err: unknown) {
+      return res
+        .status(500)
+        .json({ status: 'error', error: err || 'Server Error' });
+    }
+  }
+
+  // FETCH ALL ARTICLES
+  async fetchAllArticles(req: Request, res: Response): Promise<Response> {
+    try {
+      const page = Number.parseInt(req.query.page as string, 10) || 1;
+      const limit = Number.parseInt(req.query.limit as string, 10) || 10;
+
+      const offset = (page - 1) * limit;
+
+      const articlesCountResult = await pool.query(getArticlesCount);
+      const articlesCount = articlesCountResult.rows[0].total_count;
+      const parsedArticlesCount = Number.parseInt(articlesCount, 10);
+
+      const articlesResponse = await pool.query(fetchAllArticlesQuery, [
+        limit,
+        offset,
+      ]);
+
+      const articles = articlesResponse.rows;
+
+      return res.status(200).json({
+        status: 'success',
+        data: {
+          message: 'Articles successfully fetched',
+          articlesCount: parsedArticlesCount,
+          articles,
+        },
+      });
+    } catch (err: unknown) {
+      return res
+        .status(500)
+        .json({ status: 'error', error: err || 'Server Error' });
+    }
+  }
+
+  // FETCH USER ARTICLES
+  async fetchUserArticles(req: Request, res: Response): Promise<Response> {
+    try {
+      const creatorId = Number.parseInt(req.params.creatorId, 10);
+      const page = Number.parseInt(req.params.page, 10);
+      const limit = 10;
+
+      const offset = (page - 1) * limit;
+
+      const creatorResponse = await pool.query(fetchUserByIdQuery, [creatorId]);
+
+      if (
+        !creatorResponse ||
+        !creatorResponse.rows ||
+        creatorResponse.rows.length === 0
+      ) {
+        return res.status(404).json({
+          status: 'error',
+          error: 'A problem occured with finding this user',
+        });
+      }
+
+      const articlesCountResponse = await pool.query(getUserArticlesCount, [
+        creatorId,
+      ]);
+      const articlesCount = articlesCountResponse.rows[0].user_articles_count;
+      const parsedArticlesCount = Number.parseInt(articlesCount, 10);
+
+      const articlesResponse = await pool.query(fetchUserArticlesQuery, [
+        creatorId,
+        limit,
+        offset,
+      ]);
+
+      const articles = articlesResponse.rows;
+
+      if (articles.length === 0) {
+        return res.status(200).json({
+          status: 'success',
+          data: {
+            message: `No Articles from this user yet`,
+          },
+        });
+      }
+
+      return res.status(200).json({
+        status: 'success',
+        data: {
+          message: `User's Articles fetched successfully`,
+          userArticlesCount: parsedArticlesCount,
+          articles,
+        },
+      });
+    } catch (err: unknown) {
+      return res
+        .status(500)
+        .json({ status: 'error', error: err || 'Server Error' });
+    }
+  }
+
+  // FETCH SINGLE ARTICLE
+  async fetchSingleArticle(req: Request, res: Response): Promise<Response> {
+    try {
+      const { articleId } = req.params;
+      const parsedArticleId = Number.parseInt(articleId, 10);
+
+      const fetchResponse = await pool.query(fetchArticleById, [
+        parsedArticleId,
+      ]);
+
+      if (
+        !fetchResponse ||
+        !fetchResponse.rows ||
+        fetchResponse.rows.length === 0
+      ) {
+        return res.status(404).json({
+          status: 'error',
+          error: 'Post not found',
+        });
+      }
+
+      const { article_id, creator_id, title, content, created_on } =
+        fetchResponse.rows[0];
+
+      return res.status(200).json({
+        status: 'success',
+        data: {
+          message: 'Article fetched successfully',
+          articleId: article_id,
+          creatorId: creator_id,
+          title,
+          content,
+          createdOn: created_on,
+        },
+      });
+    } catch (err: unknown) {
+      return res
+        .status(500)
+        .json({ status: 'error', error: err || 'Server Error' });
+    }
+  }
+
+  // LIKE ARTICLE
+  async likeArticle(req: Request, res: Response): Promise<Response> {
+    try {
+      const { articleId } = req.params;
+      const likeCreatorId = req.user?.user_id;
+      const parsedArticleId = Number.parseInt(articleId, 10);
+
+      const checkArticle = await pool.query(fetchArticleById, [
+        parsedArticleId,
+      ]);
+
+      if (
+        !checkArticle ||
+        !checkArticle.rows ||
+        checkArticle.rows.length === 0
+      ) {
+        return res.status(404).json({
+          status: 'error',
+          error: 'article might have been deleted or does not exist',
+        });
+      }
+
+      const currentTimeInMilliseconds = Date.now();
+      const dbFormatCurrentTime = new Date(
+        currentTimeInMilliseconds
+      ).toISOString();
+
+      const hasLiked = await pool.query(fetchArticleLikes, [
+        likeCreatorId,
+        parsedArticleId,
+      ]);
+
+      if (hasLiked.rows.length !== 0) {
+        await pool.query(removeArticleLikeQuery, [
+          likeCreatorId,
+          parsedArticleId,
+        ]);
+
+        const getArticleLikesCount = await pool.query(
+          getArticleLikesCountQuery,
+          [parsedArticleId]
+        );
+
+        if (!getArticleLikesCount.rows[0].article_likes_count) {
+          return res.status(404).json({
+            status: 'error',
+            error: 'error retrieving likes',
+          });
+        }
+
+        const articleLikesCount =
+          getArticleLikesCount.rows[0].article_likes_count;
+        const parsedArticleLikesCount = Number.parseInt(articleLikesCount, 10);
+
+        return res.status(200).json({
+          status: 'success',
+          data: {
+            message: 'unliked article!',
+            likes: parsedArticleLikesCount,
+          },
+        });
+      }
+
+      const likeArticle = await pool.query(likeArticleQuery, [
+        likeCreatorId,
+        parsedArticleId,
+        dbFormatCurrentTime,
+      ]);
+
+      if (!likeArticle || !likeArticle.rows || likeArticle.rows.length === 0) {
+        return res.status(500).json({
+          status: 'error',
+          error: 'Could not like post, try again later',
+        });
+      }
+
+      const { liked_at } = likeArticle.rows[0];
+
+      const getArticleLikesCount = await pool.query(getArticleLikesCountQuery, [
+        parsedArticleId,
+      ]);
+
+      if (!getArticleLikesCount.rows[0].article_likes_count) {
+        return res.status(404).json({
+          status: 'error',
+          error: 'error retrieving likes',
+        });
+      }
+
+      const articleLikeCount = getArticleLikesCount.rows[0].article_likes_count;
+      const parsedArticleLikeCount = Number.parseInt(articleLikeCount, 10);
+
+      return res.status(201).json({
+        status: 'success',
+        data: {
+          message: 'Article liked!',
+          likedAt: liked_at,
+          likes: parsedArticleLikeCount,
+        },
+      });
+    } catch (err: unknown) {
+      return res
+        .status(500)
+        .json({ status: 'error', error: err || 'Server Error' });
+    }
+  }
+
+  // COMMENT ON ARTICLE
+  async commentOnArticle(req: Request, res: Response): Promise<Response> {
+    try {
+      const { comment } = req.body;
+      const { articleId } = req.params;
+      const reqUserId = req.user?.user_id;
+
+      const parsedArticleId = Number.parseInt(articleId, 10);
+
+      const checkArticle = await pool.query(fetchArticleById, [
+        parsedArticleId,
+      ]);
+
+      if (
+        !checkArticle ||
+        !checkArticle.rows ||
+        checkArticle.rows.length === 0
+      ) {
+        return res.status(404).json({
+          status: 'error',
+          error: 'article might have been deleted or does not exist',
+        });
+      }
+
+      const currentTimeInMilliseconds = Date.now();
+      const dbFormatCurrentTime = new Date(
+        currentTimeInMilliseconds
+      ).toISOString();
+
+      const commentResponse = await pool.query(commentOnArticleQuery, [
+        comment,
+        dbFormatCurrentTime,
+        reqUserId,
+        parsedArticleId,
+      ]);
+
+      if (
+        !commentResponse ||
+        !commentResponse.rows ||
+        commentResponse.rows.length === 0
+      ) {
+        return res.status(400).json({
+          status: 'error',
+          error: 'failed to post comment, try again.',
+        });
+      }
+
+      const { comment_id, comment_text, created_at, user_id, article_id } =
+        commentResponse.rows[0];
+
+      return res.status(201).json({
+        status: 'success',
+        data: {
+          message: 'comment posted!',
+          commentId: comment_id,
+          comment: comment_text,
+          createdAt: created_at,
+          userId: user_id,
+          articleId: article_id,
+        },
+      });
+    } catch (err: unknown) {
+      return res
+        .status(500)
+        .json({ status: 'error', error: err || 'Server Error' });
+    }
+  }
+
+  // FETCH ARTICLE COMMENTS
+  async fetchArticleComments(req: Request, res: Response): Promise<Response> {
+    try {
+      const { articleId } = req.params;
+      const page = Number.parseInt(req.params.page, 10);
+      const limit = 10;
+
+      const parsedArticleId = Number.parseInt(articleId, 10);
+
+      const offset = (page - 1) * limit;
+
+      const checkArticle = await pool.query(fetchArticleById, [
+        parsedArticleId,
+      ]);
+
+      if (
+        !checkArticle ||
+        !checkArticle.rows ||
+        checkArticle.rows.length === 0
+      ) {
+        return res.status(404).json({
+          status: 'error',
+          error: 'article might have been deleted or does not exist',
+        });
+      }
+
+      const commentsResponse = await pool.query(fetchArticleCommentsQuery, [
+        parsedArticleId,
+        limit,
+        offset,
+      ]);
+
+      const comments = commentsResponse.rows;
+
+      const commentsCountResponse = await pool.query(
+        getArticleCommentsCountQuery,
+        [parsedArticleId]
+      );
+
+      const commentsCount = commentsCountResponse.rows[0].comments_count;
+      const parsedCommentsCount = Number.parseInt(commentsCount, 10);
+
+      if (page === 1 && comments.length === 0) {
+        return res.status(200).json({
+          status: 'success',
+          data: {
+            message: 'Be the first to comment on this post',
+            commentsCount: parsedCommentsCount,
+            comments,
+          },
+        });
+      }
+
+      return res.status(200).json({
+        status: 'success',
+        data: {
+          message: 'comments fetched successfully',
+          commentsCount: parsedCommentsCount,
+          comments,
+        },
+      });
+    } catch (err: unknown) {
+      return res
+        .status(500)
+        .json({ status: 'error', error: err || 'Server Error' });
+    }
+  }
+
+  // EDIT ARTICLE COMMENT
+  async editArticleComment(req: Request, res: Response): Promise<Response> {
+    try {
+      const { comment } = req.body;
+      const commentId = Number.parseInt(req.params.commentId, 10);
+      const reqUserId = req.user?.user_id;
+
+      const checkComment = await pool.query(fetchSingleArticleCommentQuery, [
+        commentId,
+      ]);
+
+      if (
+        !checkComment ||
+        !checkComment.rows ||
+        checkComment.rows.length === 0
+      ) {
+        return res.status(404).json({
+          status: 'error',
+          error: 'comment might have been deleted or does not exist',
+        });
+      }
+
+      const { user_id } = checkComment.rows[0];
+
+      if (user_id !== reqUserId) {
+        return res.status(403).json({
+          status: 'error',
+          error: 'Forbidden.',
+        });
+      }
+
+      const currentTimeInMilliseconds = Date.now();
+      const dbFormatCurrentTime = new Date(
+        currentTimeInMilliseconds
+      ).toISOString();
+
+      const editCommentResponse = await pool.query(editArticleCommentQuery, [
+        comment,
+        dbFormatCurrentTime,
+        commentId,
+      ]);
+
+      if (
+        !editCommentResponse ||
+        !editCommentResponse.rows ||
+        editCommentResponse.rows.length === 0
+      ) {
+        return res.status(400).json({
+          status: 'error',
+          error: 'Failed to update comment, try again.',
+        });
+      }
+
+      const { comment_id, comment_text, updated_at } =
+        editCommentResponse.rows[0];
+
+      return res.status(200).json({
+        status: 'success',
+        data: {
+          message: 'comment updated!',
+          commentId: comment_id,
+          comment: comment_text,
+          updatedAt: updated_at,
+        },
+      });
+    } catch (err: unknown) {
+      return res
+        .status(500)
+        .json({ status: 'error', error: err || 'Server Error' });
+    }
+  }
+
+  // DELETE ARTICLE COMMENT
+  async deleteArticleComment(req: Request, res: Response): Promise<Response> {
+    try {
+      const { commentId } = req.params;
+      const parsedCommentId = Number.parseInt(commentId, 10);
+      const reqUserId = req.user?.user_id;
+
+      const checkComment = await pool.query(fetchSingleArticleCommentQuery, [
+        parsedCommentId,
+      ]);
+
+      if (
+        !checkComment ||
+        !checkComment.rows ||
+        checkComment.rows.length === 0
+      ) {
+        return res.status(404).json({
+          status: 'error',
+          error: 'comment might have been deleted or does not exist',
+        });
+      }
+
+      const { user_id } = checkComment.rows[0];
+
+      if (user_id !== reqUserId) {
+        return res.status(403).json({
+          status: 'error',
+          error: 'Forbidden.',
+        });
+      }
+
+      const deleteCommentResponse = await pool.query(
+        deleteArticleCommentQuery,
+        [parsedCommentId]
+      );
+
+      if (
+        !deleteCommentResponse ||
+        !deleteCommentResponse.rows ||
+        deleteCommentResponse.rows.length === 0
+      ) {
+        return res.status(500).json({
+          status: 'error',
+          error: 'unable to delete comment, please retry later',
+        });
+      }
+
+      return res.status(200).json({
+        status: 'success',
+        data: {
+          message: 'comment deleted',
+        },
+      });
+    } catch (err: unknown) {
+      return res
+        .status(500)
+        .json({ status: 'error', error: err || 'Server Error' });
+    }
+  }
+
+  // ADMIN DELETE ARTICLE
+  async adminDeleteArticleComment(
+    req: Request,
+    res: Response
+  ): Promise<Response> {
+    try {
+      const { commentId } = req.params;
+      const parsedCommentId = Number.parseInt(commentId, 10);
+
+      const checkComment = await pool.query(fetchSingleArticleCommentQuery, [
+        parsedCommentId,
+      ]);
+
+      if (
+        !checkComment ||
+        !checkComment.rows ||
+        checkComment.rows.length === 0
+      ) {
+        return res.status(404).json({
+          status: 'error',
+          error: 'comment might have been deleted or does not exist',
+        });
+      }
+
+      const deleteCommentResponse = await pool.query(
+        deleteArticleCommentQuery,
+        [parsedCommentId]
+      );
+
+      if (
+        !deleteCommentResponse ||
+        !deleteCommentResponse.rows ||
+        deleteCommentResponse.rows.length === 0
+      ) {
+        return res.status(500).json({
+          status: 'error',
+          error: 'unable to delete comment, please retry later',
+        });
+      }
+
+      return res.status(200).json({
+        status: 'success',
+        data: {
+          message: 'comment deleted',
+        },
+      });
+    } catch (err: unknown) {
+      return res
+        .status(500)
+        .json({ status: 'error', error: err || 'Server Error' });
+    }
+  }
+
+  // FETCH ALL POSTS (ARTICLES + GIFS)
+  async fetchAllPosts(req: Request, res: Response): Promise<Response> {
+    try {
+      const page = Number.parseInt(req.query.page as string, 10) || 1;
+      const limit = Number.parseInt(req.query.limit as string, 10) || 10;
+
+      const offset = (page - 1) * limit;
+
+      const postsResponse = await pool.query(fetchAllPostsQuery, [
+        limit,
+        offset,
+      ]);
+
+      const posts = postsResponse.rows;
+
+      if (page === 1 && posts.length === 0) {
+        return res.status(200).json({
+          status: 'success',
+          data: {
+            message: 'No posts yet',
+          },
+        });
+      }
+
+      const postsCountResponse = await pool.query(
+        getAllArticlesAndGifsCountQuery
+      );
+      const postsCount = postsCountResponse.rows[0].total_count;
+      const parsedPostsCount = Number.parseInt(postsCount, 10);
+
+      return res.status(200).json({
+        status: 'success',
+        data: {
+          message: 'Posts fetched successfully',
+          postsCount: parsedPostsCount,
+          posts,
         },
       });
     } catch (err: unknown) {

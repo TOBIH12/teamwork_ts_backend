@@ -240,14 +240,16 @@ export default class UserControllers {
       const { newPassword, confirmNewPassword } = req.body;
       const { userId, token } = req.params;
 
-      const parsedUserId = Number.parseInt(userId, 10)
+      const parsedUserId = Number.parseInt(userId, 10);
 
       const hashedToken = crypto
         .createHash('sha256')
         .update(token)
         .digest('hex');
 
-      const dbTokenUserLookUp = await pool.query(fetchUserByIdQuery, [parsedUserId]);
+      const dbTokenUserLookUp = await pool.query(fetchUserByIdQuery, [
+        parsedUserId,
+      ]);
 
       if (!dbTokenUserLookUp.rows || dbTokenUserLookUp.rows.length === 0) {
         return res.status(400).json({
@@ -299,7 +301,7 @@ export default class UserControllers {
           error: 'Could not update password. please try again later.',
         });
       }
-      
+
       return res.status(200).json({
         status: 'success',
         data: {
@@ -321,11 +323,11 @@ export default class UserControllers {
       const page = Number.parseInt(req.params.page, 10);
       const limit = 10;
 
-      if(!Number.isFinite(page) || page <= 0){
+      if (!Number.isFinite(page) || page <= 0) {
         return res.status(400).json({
           status: 'error',
-          error: 'Invalid page number'
-        })
+          error: 'Invalid page number',
+        });
       }
 
       const offset = (page - 1) * limit;
@@ -358,7 +360,7 @@ export default class UserControllers {
     try {
       const { userId } = req.params;
 
-      const parsedUserId = Number.parseInt(userId, 10)
+      const parsedUserId = Number.parseInt(userId, 10);
 
       const userResponse = await pool.query(fetchUserByIdQuery, [parsedUserId]);
 
@@ -537,8 +539,8 @@ export default class UserControllers {
 
       const { user_img } = checkUser.rows[0];
 
-      if(typeof user_img === 'string'){
-        handleCloudinaryFileDelete(user_img)
+      if (typeof user_img === 'string') {
+        handleCloudinaryFileDelete(user_img);
       }
 
       const userImg = req.file;
@@ -546,7 +548,7 @@ export default class UserControllers {
       const b64 = Buffer.from(userImg.buffer).toString('base64');
       const dataURI = `data:${userImg.mimetype};base64,${b64}`;
 
-      const userImgUrl = await handleCloudinaryUpload(dataURI, "avatars");
+      const userImgUrl = await handleCloudinaryUpload(dataURI, 'avatars');
 
       if (!userImgUrl || !userImgUrl.secure_url) {
         return res.status(500).json({
@@ -589,7 +591,7 @@ export default class UserControllers {
       const { userId } = req.params;
       const { role } = req.params;
 
-      const parsedUserId = Number.parseInt(userId, 10)
+      const parsedUserId = Number.parseInt(userId, 10);
 
       const user = await pool.query(fetchUserByIdQuery, [parsedUserId]);
 
@@ -656,7 +658,7 @@ export default class UserControllers {
     try {
       const { userId } = req.params;
 
-      const parsedUserId = Number.parseInt(userId, 10)
+      const parsedUserId = Number.parseInt(userId, 10);
 
       const user = await pool.query(fetchUserByIdQuery, [parsedUserId]);
 
@@ -677,10 +679,10 @@ export default class UserControllers {
         });
       }
 
-      if(typeof user_img === 'string'){
-         await handleCloudinaryFileDelete(user_img);
+      if (typeof user_img === 'string') {
+        await handleCloudinaryFileDelete(user_img);
       }
-      
+
       const deleteUser = await pool.query(deleteUserQuery, [user_id]);
 
       if (!deleteUser || deleteUser.rows.length === 0) {
