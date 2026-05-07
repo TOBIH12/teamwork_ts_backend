@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { UserRoles } from './utils/userInterface';
+import { ArticleCategory, UserRoles } from './utils/userInterface';
 
 // ------------- USER SCHEMAS -----------------
 
@@ -258,15 +258,31 @@ export const deleteGifCommentSchemaDTO = z.object({
 export const postArticleSchema = z.object({
   title: z.string().min(1, 'Title is required').max(100),
   content: z.string().min(1, 'Content is required').max(800),
+  category: z.enum(
+    [
+      ArticleCategory.Business,
+      ArticleCategory.Education,
+      ArticleCategory.Entertainment,
+      ArticleCategory.Sports,
+      ArticleCategory.Technology,
+      ArticleCategory.Uncategorized,
+    ],
+    'Invalid category'
+  ),
 });
 
 export const postArticleSchemaDTO = z.object({
   body: postArticleSchema,
 });
 
+export const editArticleSchema = z.object({
+  title: z.string().min(1, 'Title is required').max(100),
+  content: z.string().min(1, 'Content is required').max(800),
+});
+
 // EDIT ARTICLE SCHEMA
 export const editArticleSchemaDTO = z.object({
-  body: postArticleSchema,
+  body: editArticleSchema,
   params: z.object({
     articleId: z.coerce
       .number('Invalid article ID')
@@ -315,6 +331,28 @@ export const fetchUserArticlesSchema = z.object({
 
 export const fetchUserArticlesSchemaDTO = z.object({
   params: fetchUserArticlesSchema,
+});
+
+export const fetchCategoryArticle = z.object({
+  category: z.enum(
+    [
+      ArticleCategory.Business,
+      ArticleCategory.Education,
+      ArticleCategory.Entertainment,
+      ArticleCategory.Sports,
+      ArticleCategory.Technology,
+      ArticleCategory.Uncategorized,
+    ],
+    'Invalid category'
+  ),
+  page: z.coerce
+    .number('Invalid page')
+    .int('Invalid page')
+    .positive('Invalid page'),
+});
+
+export const fetchCategoryArticleDTO = z.object({
+  params: fetchCategoryArticle,
 });
 
 export const fetchSingleArticleSchemaDTO = z.object({

@@ -45,6 +45,8 @@ import {
   deleteArticleCommentQuery,
   fetchAllPostsQuery,
   getAllArticlesAndGifsCountQuery,
+  getCategoryArticlesCount,
+  fetchCategoryArticles,
 } from '../../queries/posts.queries';
 import { fetchUserByIdQuery } from '../../queries/users.queries';
 
@@ -726,12 +728,13 @@ export default class PostsControllers {
     res: Response
   ): Promise<Response> {
     try {
-      const { title, content } = req.body;
+      const { title, content, category } = req.body;
       const creatorId = req.user?.user_id;
 
       const newArticlePost = await pool.query(insertArticlePostQuery, [
         title,
         content,
+        category,
         creatorId,
       ]);
 
@@ -744,6 +747,7 @@ export default class PostsControllers {
           articleId: article_id,
           title,
           content,
+          category,
           createdOn: created_on,
           creatorId: creator_id,
         },
@@ -1013,6 +1017,58 @@ export default class PostsControllers {
           message: `User's Articles fetched successfully`,
           userArticlesCount: parsedArticlesCount,
           articles,
+        },
+      });
+    } catch (err: unknown) {
+      return res
+        .status(500)
+        .json({ status: 'error', error: err || 'Server Error' });
+    }
+  }
+
+  // FETCH CATEGORY ARTICLE
+  async fetchCategoryArticle(req: Request, res: Response): Promise<Response> {
+    try {
+      const { category } = req.params;
+      const page = Number.parseInt(req.params.page, 10);
+      const limit = 10;
+
+      const offset = (page - 1) * limit;
+
+      const categoryArticlesCountResult = await pool.query(
+        getCategoryArticlesCount,
+        [category]
+      );
+      const categoryArticlesCount =
+        categoryArticlesCountResult.rows[0].category_articles_count;
+      const parsedCategoryArticlesCount = Number.parseInt(
+        categoryArticlesCount,
+        10
+      );
+
+      const categoryArticlesResponse = await pool.query(fetchCategoryArticles, [
+        category,
+        limit,
+        offset,
+      ]);
+
+      const categoryArticles = categoryArticlesResponse.rows;
+
+      if (categoryArticles.length === 0) {
+        return res.status(200).json({
+          status: 'success',
+          data: {
+            message: `No Articles in this category yet`,
+          },
+        });
+      }
+
+      return res.status(200).json({
+        status: 'success',
+        data: {
+          message: `Category Articles fetched successfully`,
+          categoryArticlesCount: parsedCategoryArticlesCount,
+          articles: categoryArticles,
         },
       });
     } catch (err: unknown) {

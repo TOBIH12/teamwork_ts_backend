@@ -76,6 +76,7 @@ describe('Post Article Endpoint', () => {
       .send({
         title: 'Post article endpoint test',
         content: 'Our very first artcile post!',
+        category: 'technology',
       });
     expect(res.status).to.equal(201);
     expect(res.body).to.have.property('status', 'success');
@@ -98,6 +99,7 @@ describe('Post Article Endpoint', () => {
       .send({
         title: '',
         content: 'Our very first article post!',
+        category: 'technology',
       });
     expect(res.status).to.equal(400);
     expect(res.body).to.have.property('status', 'validation error');
@@ -108,6 +110,7 @@ describe('Post Article Endpoint', () => {
     const res = await request(app).post('/api/v1/posts/post_article').send({
       title: 'Post article endpoint test',
       content: 'Our very first article post!',
+      category: 'technology',
     });
     expect(res.status).to.equal(401);
     expect(res.body).to.be.an('object');
@@ -139,6 +142,7 @@ describe('Edit Article Endpoint', () => {
       .send({
         title: 'Edit article endpoint test',
         content: 'Our second article post!',
+        category: 'technology',
       });
 
     if (!postArticle) {
@@ -215,6 +219,7 @@ describe('Delete Article Endpoint', () => {
       .send({
         title: 'Delete article endpoint test',
         content: 'Our third article post!',
+        category: 'technology',
       });
 
     if (!postArticle2) {
@@ -227,6 +232,7 @@ describe('Delete Article Endpoint', () => {
       .send({
         title: 'Delete article endpoint test',
         content: 'Our fourth article post!',
+        category: 'technology',
       });
 
     if (!postArticle3) {
@@ -285,6 +291,7 @@ describe('Admin Delete Article Endpoint', () => {
       .send({
         title: 'Delete article endpoint test',
         content: 'Our fifth article post!',
+        category: 'technology',
       });
 
     if (!postArticle) {
@@ -429,6 +436,57 @@ describe('Fetch User Articles Endpoint', () => {
     expect(res.body).to.have.property(
       'error',
       `Authorization token is missing`
+    );
+  });
+});
+
+describe('Fetch Category Articles Endpoint', () => {
+  let token = '';
+
+  before(async () => {
+    const res = await request(app).post('/api/v1/users/signin').send({
+      email: 'dave@gmail.com',
+      password: 'password123',
+    });
+    if (!res.body || !res.body.data || !res.body.data.token) {
+      console.log('Error signing in:', res.body);
+    }
+
+    token = res.body.data.token || res.body.token;
+  });
+
+  it(`should fetch articles of a category successfully`, async () => {
+    const res = await request(app)
+      .get('/api/v1/posts/article/category_articles/technology/1')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).to.equal(200);
+    expect(res.body).to.be.an('object');
+    expect(res.body).to.have.property('status', 'success');
+    expect(res.body.data).to.be.an('object');
+    expect(res.body.data).to.have.property(
+      'message',
+      `Category Articles fetched successfully`
+    );
+    expect(res.body.data).to.have.property('categoryArticlesCount');
+    expect(res.body.data.categoryArticlesCount).to.be.a('number');
+    expect(res.body.data.categoryArticlesCount).to.be.at.least(1);
+    expect(res.body.data).to.have.property('articles');
+    expect(res.body.data.articles).to.be.an('array');
+    expect(res.body.data.articles.length).to.equal(
+      res.body.data.categoryArticlesCount
+    );
+  });
+
+  it(`should return a message for existing category with no articles`, async () => {
+    const res = await request(app)
+      .get('/api/v1/posts/article/category_articles/uncategorized/1')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).to.equal(200);
+    expect(res.body).to.be.an('object');
+    expect(res.body).to.have.property('status', 'success');
+    expect(res.body.data).to.have.property(
+      'message',
+      `No Articles in this category yet`
     );
   });
 });
