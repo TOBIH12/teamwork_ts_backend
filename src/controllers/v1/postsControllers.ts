@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import dotenv from 'dotenv';
 import z from 'zod';
+import { ca } from 'zod/v4/locales';
 import pool from '../../db';
 import { postGifSchema, postArticleSchema } from '../../zodSchema';
 import {
@@ -1035,40 +1036,33 @@ export default class PostsControllers {
 
       const offset = (page - 1) * limit;
 
-      const categoryArticlesCountResult = await pool.query(
+      const categoryArticlesCountQuery = await pool.query(
         getCategoryArticlesCount,
         [category]
       );
-      const categoryArticlesCount =
-        categoryArticlesCountResult.rows[0].category_articles_count;
+
+      const categoryArticlesResponseQuery = await pool.query(
+        fetchCategoryArticles,
+        [category, limit, offset]
+      );
+
+      const [categoryArticlesCount, categoryArticlesResponse] =
+        await Promise.all([
+          categoryArticlesCountQuery.rows[0].category_articles_count,
+          categoryArticlesResponseQuery.rows,
+        ]);
+
       const parsedCategoryArticlesCount = Number.parseInt(
         categoryArticlesCount,
         10
       );
-
-      const categoryArticlesResponse = await pool.query(fetchCategoryArticles, [
-        category,
-        limit,
-        offset,
-      ]);
-
-      const categoryArticles = categoryArticlesResponse.rows;
-
-      if (categoryArticles.length === 0) {
-        return res.status(200).json({
-          status: 'success',
-          data: {
-            message: `No Articles in this category yet`,
-          },
-        });
-      }
 
       return res.status(200).json({
         status: 'success',
         data: {
           message: `Category Articles fetched successfully`,
           categoryArticlesCount: parsedCategoryArticlesCount,
-          articles: categoryArticles,
+          articles: categoryArticlesResponse,
         },
       });
     } catch (err: unknown) {
@@ -1561,7 +1555,14 @@ export default class PostsControllers {
         offset,
       ]);
 
-      const posts = postsResponse.rows;
+      const postsCountResponse = await pool.query(
+        getAllArticlesAndGifsCountQuery
+      );
+
+      const [posts, postsCount] = await Promise.all([
+        postsResponse.rows,
+        postsCountResponse.rows[0].total_count,
+      ]);
 
       if (page === 1 && posts.length === 0) {
         return res.status(200).json({
@@ -1572,10 +1573,6 @@ export default class PostsControllers {
         });
       }
 
-      const postsCountResponse = await pool.query(
-        getAllArticlesAndGifsCountQuery
-      );
-      const postsCount = postsCountResponse.rows[0].total_count;
       const parsedPostsCount = Number.parseInt(postsCount, 10);
 
       return res.status(200).json({

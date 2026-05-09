@@ -104,10 +104,10 @@ export const deleteArticleCommentQuery = `DELETE FROM "article_comments" WHERE "
 export const fetchAllPostsQuery = `
 SELECT * FROM (
 (SELECT 
-article_id AS feed_id, creator_id, title, content, created_on, NULL AS gif_url, 'article' AS post_type FROM "articles")
+article_id AS feed_id, creator_id, title, content, category, created_on, NULL AS gif_url, 'article' AS post_type FROM "articles")
 UNION ALL
 (SELECT 
-gif_id AS feed_id, creator_id, title, NULL AS content, created_on, gif_url, 'gif' AS post_type FROM "gifs")
+gif_id AS feed_id, creator_id, title, NULL AS content, NULL AS category, created_on, gif_url, 'gif' AS post_type FROM "gifs")
 ) AS combined_posts
 ORDER BY created_on ASC
 LIMIT $1 OFFSET $2

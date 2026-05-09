@@ -486,7 +486,7 @@ describe('Fetch Category Articles Endpoint', () => {
     expect(res.body).to.have.property('status', 'success');
     expect(res.body.data).to.have.property(
       'message',
-      `No Articles in this category yet`
+      `Category Articles fetched successfully`
     );
   });
 });
