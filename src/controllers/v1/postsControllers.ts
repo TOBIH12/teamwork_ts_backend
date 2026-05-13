@@ -1036,24 +1036,18 @@ export default class PostsControllers {
 
       const offset = (page - 1) * limit;
 
-      const categoryArticlesCountQuery = await pool.query(
-        getCategoryArticlesCount,
-        [category]
-      );
-
-      const categoryArticlesResponseQuery = await pool.query(
-        fetchCategoryArticles,
-        [category, limit, offset]
-      );
+      const queries = [
+        await pool.query(getCategoryArticlesCount, [category]),
+        await pool.query(fetchCategoryArticles, [category, limit, offset]),
+      ];
 
       const [categoryArticlesCount, categoryArticlesResponse] =
-        await Promise.all([
-          categoryArticlesCountQuery.rows[0].category_articles_count,
-          categoryArticlesResponseQuery.rows,
-        ]);
+        await Promise.all(queries).catch((err) => {
+          throw err;
+        });
 
       const parsedCategoryArticlesCount = Number.parseInt(
-        categoryArticlesCount,
+        categoryArticlesCount.rows[0].category_articles_count,
         10
       );
 
@@ -1062,7 +1056,7 @@ export default class PostsControllers {
         data: {
           message: `Category Articles fetched successfully`,
           categoryArticlesCount: parsedCategoryArticlesCount,
-          articles: categoryArticlesResponse,
+          articles: categoryArticlesResponse.rows,
         },
       });
     } catch (err: unknown) {
@@ -1550,21 +1544,16 @@ export default class PostsControllers {
 
       const offset = (page - 1) * limit;
 
-      const postsResponse = await pool.query(fetchAllPostsQuery, [
-        limit,
-        offset,
-      ]);
+      const queries = [
+        await pool.query(fetchAllPostsQuery, [limit, offset]),
+        await pool.query(getAllArticlesAndGifsCountQuery),
+      ];
 
-      const postsCountResponse = await pool.query(
-        getAllArticlesAndGifsCountQuery
-      );
+      const [posts, postsCount] = await Promise.all(queries).catch((err) => {
+        throw err;
+      });
 
-      const [posts, postsCount] = await Promise.all([
-        postsResponse.rows,
-        postsCountResponse.rows[0].total_count,
-      ]);
-
-      if (page === 1 && posts.length === 0) {
+      if (page === 1 && posts.rows.length === 0) {
         return res.status(200).json({
           status: 'success',
           data: {
@@ -1573,14 +1562,17 @@ export default class PostsControllers {
         });
       }
 
-      const parsedPostsCount = Number.parseInt(postsCount, 10);
+      const parsedPostsCount = Number.parseInt(
+        postsCount.rows[0].total_count,
+        10
+      );
 
       return res.status(200).json({
         status: 'success',
         data: {
           message: 'Posts fetched successfully',
           postsCount: parsedPostsCount,
-          posts,
+          posts: posts.rows,
         },
       });
     } catch (err: unknown) {
