@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
 import dotenv from 'dotenv';
 import z from 'zod';
-import { ca } from 'zod/v4/locales';
 import pool from '../../db';
 import { postGifSchema, postArticleSchema } from '../../zodSchema';
 import {
@@ -1036,15 +1035,11 @@ export default class PostsControllers {
 
       const offset = (page - 1) * limit;
 
-      const queries = [
-        pool.query(getCategoryArticlesCount, [category]),
-        pool.query(fetchCategoryArticles, [category, limit, offset]),
-      ];
-
       const [categoryArticlesCount, categoryArticlesResponse] =
-        await Promise.all(queries).catch((err) => {
-          throw err;
-        });
+        await Promise.all([
+          pool.query(getCategoryArticlesCount, [category]),
+          pool.query(fetchCategoryArticles, [category, limit, offset]),
+        ]);
 
       const parsedCategoryArticlesCount = Number.parseInt(
         categoryArticlesCount.rows[0].category_articles_count,
@@ -1544,14 +1539,10 @@ export default class PostsControllers {
 
       const offset = (page - 1) * limit;
 
-      const queries = [
-         pool.query(fetchAllPostsQuery, [limit, offset]),
-         pool.query(getAllArticlesAndGifsCountQuery),
-      ];
-
-      const [posts, postsCount] = await Promise.all(queries).catch((err) => {
-        throw err;
-      });
+      const [posts, postsCount] = await Promise.all([
+        pool.query(fetchAllPostsQuery, [limit, offset]),
+        pool.query(getAllArticlesAndGifsCountQuery),
+      ]);
 
       if (page === 1 && posts.rows.length === 0) {
         return res.status(200).json({

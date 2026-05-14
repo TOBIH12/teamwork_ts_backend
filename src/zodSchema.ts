@@ -258,17 +258,7 @@ export const deleteGifCommentSchemaDTO = z.object({
 export const postArticleSchema = z.object({
   title: z.string().min(1, 'Title is required').max(100),
   content: z.string().min(1, 'Content is required').max(800),
-  category: z.enum(
-    [
-      ArticleCategory.Business,
-      ArticleCategory.Education,
-      ArticleCategory.Entertainment,
-      ArticleCategory.Sports,
-      ArticleCategory.Technology,
-      ArticleCategory.Uncategorized,
-    ],
-    'Invalid category'
-  ),
+  category: z.enum(ArticleCategory, 'Invalid category'),
 });
 
 export const postArticleSchemaDTO = z.object({
@@ -334,17 +324,7 @@ export const fetchUserArticlesSchemaDTO = z.object({
 });
 
 export const fetchCategoryArticle = z.object({
-  category: z.enum(
-    [
-      ArticleCategory.Business,
-      ArticleCategory.Education,
-      ArticleCategory.Entertainment,
-      ArticleCategory.Sports,
-      ArticleCategory.Technology,
-      ArticleCategory.Uncategorized,
-    ],
-    'Invalid category'
-  ),
+  category: z.enum(ArticleCategory, 'Invalid category'),
   page: z.coerce
     .number('Invalid page')
     .int('Invalid page')

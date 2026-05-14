@@ -62,9 +62,6 @@ describe('Post Article Endpoint', () => {
       email: 'dave@gmail.com',
       password: 'password123',
     });
-    if (!res.body || !res.body.data || !res.body.data.token) {
-      console.log('Error signing in:', res.body);
-    }
 
     token = res.body.data.token || res.body.token;
   });
@@ -130,13 +127,10 @@ describe('Edit Article Endpoint', () => {
       email: 'samuel@gmail.com',
       password: 'password123',
     });
-    if (!res.body || !res.body.data || !res.body.data.token) {
-      console.log('Error signing in:', res.body);
-    }
 
     token = res.body.data.token || res.body.token;
 
-    const postArticle = await request(app)
+    await request(app)
       .post('/api/v1/posts/post_article')
       .set('Authorization', `Bearer ${token}`)
       .send({
@@ -144,10 +138,6 @@ describe('Edit Article Endpoint', () => {
         content: 'Our second article post!',
         category: 'technology',
       });
-
-    if (!postArticle) {
-      console.log('Error posting article:', postArticle);
-    }
   });
 
   it('should edit an article successfully', async () => {
@@ -207,13 +197,10 @@ describe('Delete Article Endpoint', () => {
       email: 'samuel@gmail.com',
       password: 'password123',
     });
-    if (!res.body || !res.body.data || !res.body.data.token) {
-      console.log('Error signing in:', res.body);
-    }
 
     token = res.body.data.token || res.body.token;
 
-    const postArticle2 = await request(app)
+    await request(app)
       .post('/api/v1/posts/post_article')
       .set('Authorization', `Bearer ${token}`)
       .send({
@@ -222,11 +209,7 @@ describe('Delete Article Endpoint', () => {
         category: 'technology',
       });
 
-    if (!postArticle2) {
-      console.log('Error posting article:', postArticle2);
-    }
-
-    const postArticle3 = await request(app)
+    await request(app)
       .post('/api/v1/posts/post_article')
       .set('Authorization', `Bearer ${token}`)
       .send({
@@ -234,10 +217,6 @@ describe('Delete Article Endpoint', () => {
         content: 'Our fourth article post!',
         category: 'technology',
       });
-
-    if (!postArticle3) {
-      console.log('Error posting article:', postArticle3);
-    }
   });
 
   it('should delete an article successfully', async () => {
@@ -279,13 +258,10 @@ describe('Admin Delete Article Endpoint', () => {
       email: 'dave@gmail.com',
       password: 'password123',
     });
-    if (!res.body || !res.body.data || !res.body.data.token) {
-      console.log('Error signing in:', res.body);
-    }
 
     token = res.body.data.token || res.body.token;
 
-    const postArticle = await request(app)
+    await request(app)
       .post('/api/v1/posts/post_article')
       .set('Authorization', `Bearer ${token}`)
       .send({
@@ -293,10 +269,6 @@ describe('Admin Delete Article Endpoint', () => {
         content: 'Our fifth article post!',
         category: 'technology',
       });
-
-    if (!postArticle) {
-      console.log('Error posting article:', postArticle);
-    }
   });
 
   it('should successfully delete another user article post', async () => {
@@ -329,9 +301,6 @@ describe('Fetch All Articles Endpoint', () => {
       email: 'dave@gmail.com',
       password: 'password123',
     });
-    if (!res.body || !res.body.data || !res.body.data.token) {
-      console.log('Error signing in:', res.body);
-    }
 
     token = res.body.data.token || res.body.token;
   });
@@ -377,9 +346,6 @@ describe('Fetch User Articles Endpoint', () => {
       email: 'dave@gmail.com',
       password: 'password123',
     });
-    if (!res.body || !res.body.data || !res.body.data.token) {
-      console.log('Error signing in:', res.body);
-    }
 
     token = res.body.data.token || res.body.token;
   });
@@ -448,9 +414,6 @@ describe('Fetch Category Articles Endpoint', () => {
       email: 'dave@gmail.com',
       password: 'password123',
     });
-    if (!res.body || !res.body.data || !res.body.data.token) {
-      console.log('Error signing in:', res.body);
-    }
 
     token = res.body.data.token || res.body.token;
   });
@@ -499,9 +462,6 @@ describe('Fetch Single Article Endpoint', () => {
       email: 'dave@gmail.com',
       password: 'password123',
     });
-    if (!res.body || !res.body.data || !res.body.data.token) {
-      console.log('Error signing in:', res.body);
-    }
 
     token = res.body.data.token || res.body.token;
   });
@@ -550,9 +510,6 @@ describe('Like Article Endpoint', () => {
       email: 'dave@gmail.com',
       password: 'password123',
     });
-    if (!res.body || !res.body.data || !res.body.data.token) {
-      console.log('Error signing in:', res.body);
-    }
 
     token = res.body.data.token || res.body.token;
   });
@@ -599,9 +556,6 @@ describe('Comment on Article Endpoint', () => {
       email: 'dave@gmail.com',
       password: 'password123',
     });
-    if (!res.body || !res.body.data || !res.body.data.token) {
-      console.log('Error signing in:', res.body);
-    }
 
     token = res.body.data.token || res.body.token;
   });
@@ -652,9 +606,6 @@ describe('Fetch Article Comments Endpoint', () => {
       email: 'dave@gmail.com',
       password: 'password123',
     });
-    if (!res.body || !res.body.data || !res.body.data.token) {
-      console.log('Error signing in:', res.body);
-    }
 
     token = res.body.data.token || res.body.token;
   });
@@ -708,9 +659,6 @@ describe('Edit Article Comment Endpoint', () => {
       email: 'dave@gmail.com',
       password: 'password123',
     });
-    if (!res.body || !res.body.data || !res.body.data.token) {
-      console.log('Error signing in:', res.body);
-    }
 
     token = res.body.data.token || res.body.token;
   });
@@ -776,32 +724,22 @@ describe('Delete Article Comment Endpoint', () => {
       email: 'samuel@gmail.com',
       password: 'password123',
     });
-    if (!res.body || !res.body.data || !res.body.data.token) {
-      console.log('Error signing in:', res.body);
-    }
 
     token = res.body.data.token || res.body.token;
 
-    const postComment2 = await request(app)
+    await request(app)
       .post('/api/v1/posts/article/comment/1')
       .set('Authorization', `Bearer ${token}`)
       .send({
         comment: 'Nice Writeup',
       });
 
-    if (!postComment2) {
-      console.log('Error Posting second comment:', postComment2);
-    }
-    const postComment3 = await request(app)
+    await request(app)
       .post('/api/v1/posts/article/comment/1')
       .set('Authorization', `Bearer ${token}`)
       .send({
         comment: 'Write more!',
       });
-
-    if (!postComment3) {
-      console.log('Error Posting third comment:', postComment3);
-    }
   });
 
   it('should delete a comment successfully', async () => {
@@ -852,9 +790,6 @@ describe('Admin Delete Article Comment Endpoint', () => {
       email: 'dave@gmail.com',
       password: 'password123',
     });
-    if (!res.body || !res.body.data || !res.body.data.token) {
-      console.log('Error signing in:', res.body);
-    }
 
     token = res.body.data.token || res.body.token;
   });
