@@ -1037,8 +1037,8 @@ export default class PostsControllers {
       const offset = (page - 1) * limit;
 
       const queries = [
-        await pool.query(getCategoryArticlesCount, [category]),
-        await pool.query(fetchCategoryArticles, [category, limit, offset]),
+        pool.query(getCategoryArticlesCount, [category]),
+        pool.query(fetchCategoryArticles, [category, limit, offset]),
       ];
 
       const [categoryArticlesCount, categoryArticlesResponse] =
@@ -1545,8 +1545,8 @@ export default class PostsControllers {
       const offset = (page - 1) * limit;
 
       const queries = [
-        await pool.query(fetchAllPostsQuery, [limit, offset]),
-        await pool.query(getAllArticlesAndGifsCountQuery),
+         pool.query(fetchAllPostsQuery, [limit, offset]),
+         pool.query(getAllArticlesAndGifsCountQuery),
       ];
 
       const [posts, postsCount] = await Promise.all(queries).catch((err) => {
