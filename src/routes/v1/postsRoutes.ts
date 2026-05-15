@@ -26,6 +26,7 @@ import {
   editArticleCommentSchemaDTO,
   deleteArticleCommentSchemaDTO,
   fetchAllPostsSchemaDTO,
+  fetchCategoryArticleDTO,
 } from '../../zodSchema';
 import { uploadedGif } from '../../middlewares/multerMiddleware';
 
@@ -143,6 +144,12 @@ router.get(
   authMiddleware,
   validationMiddleware(fetchUserArticlesSchemaDTO),
   postsControllers.fetchUserArticles
+);
+router.get(
+  '/article/category_articles/:category/:page',
+  authMiddleware,
+  validationMiddleware(fetchCategoryArticleDTO),
+  postsControllers.fetchCategoryArticle
 );
 router.get(
   '/article/:articleId',

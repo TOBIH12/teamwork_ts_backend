@@ -46,7 +46,7 @@ export const editGifCommentQuery = `UPDATE "gif_comments" SET comment_text = $1,
 export const deleteCommentQuery = `DELETE FROM "gif_comments" WHERE "comment_id" = $1 RETURNING *`;
 
 // ARTICLE QUERIES
-export const insertArticlePostQuery = `INSERT INTO articles (title, content, creator_id) VALUES ($1, $2, $3) RETURNING *`;
+export const insertArticlePostQuery = `INSERT INTO articles (title, content, category, creator_id) VALUES ($1, $2, $3, $4) RETURNING *`;
 
 export const fetchArticleById = `SELECT * FROM "articles" WHERE "article_id" = $1`;
 
@@ -55,7 +55,7 @@ export const deleteArticlePostQuery = `DELETE FROM "articles" WHERE "article_id"
 export const getArticlesCount = `SELECT COUNT(*) AS total_count FROM "articles"`;
 
 export const fetchAllArticlesQuery = `SELECT 
-article_id, creator_id, title, content, created_on 
+article_id, creator_id, title, content, category, created_on 
 FROM "articles" 
 ORDER BY created_on ASC
 LIMIT $1 OFFSET $2`;
@@ -63,9 +63,18 @@ LIMIT $1 OFFSET $2`;
 export const getUserArticlesCount = `SELECT COUNT(*) AS user_articles_count FROM "articles" WHERE "creator_id" = $1`;
 
 export const fetchUserArticlesQuery = `SELECT 
-article_id, creator_id, title, content, created_on 
+article_id, creator_id, title, content, category, created_on 
 FROM "articles" 
 WHERE "creator_id" = $1
+ORDER BY created_on ASC
+LIMIT $2 OFFSET $3`;
+
+export const getCategoryArticlesCount = `SELECT COUNT(*) AS category_articles_count FROM "articles" WHERE "category" = $1`;
+
+export const fetchCategoryArticles = `SELECT 
+article_id, creator_id, title, content, category, created_on 
+FROM "articles" 
+WHERE "category" = $1
 ORDER BY created_on ASC
 LIMIT $2 OFFSET $3`;
 
@@ -95,10 +104,10 @@ export const deleteArticleCommentQuery = `DELETE FROM "article_comments" WHERE "
 export const fetchAllPostsQuery = `
 SELECT * FROM (
 (SELECT 
-article_id AS feed_id, creator_id, title, content, created_on, NULL AS gif_url, 'article' AS post_type FROM "articles")
+article_id AS feed_id, creator_id, title, content, category, created_on, NULL AS gif_url, 'article' AS post_type FROM "articles")
 UNION ALL
 (SELECT 
-gif_id AS feed_id, creator_id, title, NULL AS content, created_on, gif_url, 'gif' AS post_type FROM "gifs")
+gif_id AS feed_id, creator_id, title, NULL AS content, NULL AS category, created_on, gif_url, 'gif' AS post_type FROM "gifs")
 ) AS combined_posts
 ORDER BY created_on ASC
 LIMIT $1 OFFSET $2

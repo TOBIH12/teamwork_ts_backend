@@ -45,6 +45,8 @@ import {
   deleteArticleCommentQuery,
   fetchAllPostsQuery,
   getAllArticlesAndGifsCountQuery,
+  getCategoryArticlesCount,
+  fetchCategoryArticles,
 } from '../../queries/posts.queries';
 import { fetchUserByIdQuery } from '../../queries/users.queries';
 
@@ -726,12 +728,13 @@ export default class PostsControllers {
     res: Response
   ): Promise<Response> {
     try {
-      const { title, content } = req.body;
+      const { title, content, category } = req.body;
       const creatorId = req.user?.user_id;
 
       const newArticlePost = await pool.query(insertArticlePostQuery, [
         title,
         content,
+        category,
         creatorId,
       ]);
 
@@ -744,6 +747,7 @@ export default class PostsControllers {
           articleId: article_id,
           title,
           content,
+          category,
           createdOn: created_on,
           creatorId: creator_id,
         },
@@ -1013,6 +1017,41 @@ export default class PostsControllers {
           message: `User's Articles fetched successfully`,
           userArticlesCount: parsedArticlesCount,
           articles,
+        },
+      });
+    } catch (err: unknown) {
+      return res
+        .status(500)
+        .json({ status: 'error', error: err || 'Server Error' });
+    }
+  }
+
+  // FETCH CATEGORY ARTICLE
+  async fetchCategoryArticle(req: Request, res: Response): Promise<Response> {
+    try {
+      const { category } = req.params;
+      const page = Number.parseInt(req.params.page, 10);
+      const limit = 10;
+
+      const offset = (page - 1) * limit;
+
+      const [categoryArticlesCount, categoryArticlesResponse] =
+        await Promise.all([
+          pool.query(getCategoryArticlesCount, [category]),
+          pool.query(fetchCategoryArticles, [category, limit, offset]),
+        ]);
+
+      const parsedCategoryArticlesCount = Number.parseInt(
+        categoryArticlesCount.rows[0].category_articles_count,
+        10
+      );
+
+      return res.status(200).json({
+        status: 'success',
+        data: {
+          message: `Category Articles fetched successfully`,
+          categoryArticlesCount: parsedCategoryArticlesCount,
+          articles: categoryArticlesResponse.rows,
         },
       });
     } catch (err: unknown) {
@@ -1500,14 +1539,12 @@ export default class PostsControllers {
 
       const offset = (page - 1) * limit;
 
-      const postsResponse = await pool.query(fetchAllPostsQuery, [
-        limit,
-        offset,
+      const [posts, postsCount] = await Promise.all([
+        pool.query(fetchAllPostsQuery, [limit, offset]),
+        pool.query(getAllArticlesAndGifsCountQuery),
       ]);
 
-      const posts = postsResponse.rows;
-
-      if (page === 1 && posts.length === 0) {
+      if (page === 1 && posts.rows.length === 0) {
         return res.status(200).json({
           status: 'success',
           data: {
@@ -1516,18 +1553,17 @@ export default class PostsControllers {
         });
       }
 
-      const postsCountResponse = await pool.query(
-        getAllArticlesAndGifsCountQuery
+      const parsedPostsCount = Number.parseInt(
+        postsCount.rows[0].total_count,
+        10
       );
-      const postsCount = postsCountResponse.rows[0].total_count;
-      const parsedPostsCount = Number.parseInt(postsCount, 10);
 
       return res.status(200).json({
         status: 'success',
         data: {
           message: 'Posts fetched successfully',
           postsCount: parsedPostsCount,
-          posts,
+          posts: posts.rows,
         },
       });
     } catch (err: unknown) {

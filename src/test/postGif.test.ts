@@ -50,9 +50,6 @@ describe('Post GIFS Endpoint', () => {
       email: 'dave@gmail.com',
       password: 'password123',
     });
-    if (!res.body || !res.body.data || !res.body.data.token) {
-      console.log('Error signing in:', res.body);
-    }
 
     token = res.body.data.token || res.body.token;
   });
@@ -98,14 +95,11 @@ describe('Delete Gif endpoint', () => {
     const res = await request(app).post('/api/v1/users/signin').send({
       email: 'samuel@gmail.com',
       password: 'password123',
-    });
-    if (!res.body || !res.body.data || !res.body.data.token) {
-      console.log('Error signing in:', res.body);
-    }
+    }); 
 
     token = res.body.data.token || res.body.token;
 
-    const postGif = await request(app)
+    await request(app)
       .post('/api/v1/posts/post_gif')
       .set('Authorization', `Bearer ${token}`)
       .field('title', 'A friend')
@@ -115,11 +109,7 @@ describe('Delete Gif endpoint', () => {
         'avatar3.jpg'
       );
 
-    if (!postGif.body) {
-      console.log('Error posting gif:', postGif.body);
-    }
-
-    const postGif2 = await request(app)
+    await request(app)
       .post('/api/v1/posts/post_gif')
       .set('Authorization', `Bearer ${token}`)
       .field('title', 'A friend')
@@ -130,10 +120,6 @@ describe('Delete Gif endpoint', () => {
         ),
         'Lookman-Osimhen.jpg'
       );
-
-    if (!postGif2.body) {
-      console.log('Error posting gif:', postGif2.body);
-    }
   });
 
   it('should delete a gif successfully', async () => {
@@ -179,13 +165,10 @@ describe('Admin delete gif post endpoint', () => {
       email: 'dave@gmail.com',
       password: 'password123',
     });
-    if (!res.body || !res.body.data || !res.body.data.token) {
-      console.log('Error signing in:', res.body);
-    }
 
     token = res.body.data.token || res.body.token;
 
-    const postGif = await request(app)
+     await request(app)
       .post('/api/v1/posts/post_gif')
       .set('Authorization', `Bearer ${token}`)
       .field('title', 'A friend')
@@ -194,10 +177,6 @@ describe('Admin delete gif post endpoint', () => {
         fs.readFileSync(path.join(__dirname, 'testFiles', 'avatar3.jpg')),
         'avatar3.jpg'
       );
-
-    if (!postGif.body) {
-      console.log('Error posting gif:', postGif.body);
-    }
   });
 
   it('should successfully delete another user gif post', async () => {
@@ -231,13 +210,10 @@ describe('Fetch all Gifs endpoint', () => {
       email: 'dave@gmail.com',
       password: 'password123',
     });
-    if (!res.body || !res.body.data || !res.body.data.token) {
-      console.log('Error signing in:', res.body);
-    }
 
     token = res.body.data.token || res.body.token;
 
-    const postGif = await request(app)
+    await request(app)
       .post('/api/v1/posts/post_gif')
       .set('Authorization', `Bearer ${token}`)
       .field('title', 'Another Lookalike friend')
@@ -246,10 +222,6 @@ describe('Fetch all Gifs endpoint', () => {
         fs.readFileSync(path.join(__dirname, 'testFiles', 'avatar3.jpg')),
         'avatar3.jpg'
       );
-
-    if (!postGif.body) {
-      console.log('Error posting gif:', postGif.body);
-    }
   });
 
   it('should fetch all gifs successfully', async () => {
@@ -310,9 +282,6 @@ describe('Fetch User Gifs Endpoint', () => {
       email: 'dave@gmail.com',
       password: 'password123',
     });
-    if (!res.body || !res.body.data || !res.body.data.token) {
-      console.log('Error signing in:', res.body);
-    }
 
     token = res.body.data.token || res.body.token;
   });
@@ -368,9 +337,6 @@ describe('Fetch single Gif endpoint', () => {
       email: 'dave@gmail.com',
       password: 'password123',
     });
-    if (!res.body || !res.body.data || !res.body.data.token) {
-      console.log('Error signing in:', res.body);
-    }
 
     token = res.body.data.token || res.body.token;
   });
@@ -406,9 +372,6 @@ describe('Like Gif Post endpoint', () => {
       email: 'dave@gmail.com',
       password: 'password123',
     });
-    if (!res.body || !res.body.data || !res.body.data.token) {
-      console.log('Error signing in:', res.body);
-    }
 
     token = res.body.data.token || res.body.token;
   });
@@ -455,9 +418,6 @@ describe('Comment on Gif post endpoint', () => {
       email: 'dave@gmail.com',
       password: 'password123',
     });
-    if (!res.body || !res.body.data || !res.body.data.token) {
-      console.log('Error signing in:', res.body);
-    }
 
     token = res.body.data.token || res.body.token;
   });
@@ -497,9 +457,6 @@ describe('Fetch Gif comments Endpoint', () => {
       email: 'dave@gmail.com',
       password: 'password123',
     });
-    if (!res.body || !res.body.data || !res.body.data.token) {
-      console.log('Error signing in:', res.body);
-    }
 
     token = res.body.data.token || res.body.token;
   });
@@ -553,9 +510,6 @@ describe('Edit comment endpoint', () => {
       email: 'dave@gmail.com',
       password: 'password123',
     });
-    if (!res.body || !res.body.data || !res.body.data.token) {
-      console.log('Error signing in:', res.body);
-    }
 
     token = res.body.data.token || res.body.token;
   });
@@ -610,32 +564,22 @@ describe('DELETE Gif comment Endpoint', () => {
       email: 'esther@gmail.com',
       password: 'password123',
     });
-    if (!res.body || !res.body.data || !res.body.data.token) {
-      console.log('Error signing in:', res.body);
-    }
 
     token = res.body.data.token || res.body.token;
 
-    const postComment2 = await request(app)
+     await request(app)
       .post('/api/v1/posts/gif/comment/1')
       .set('Authorization', `Bearer ${token}`)
       .send({
         comment: 'Nice Picture',
       });
 
-    if (!postComment2) {
-      console.log('Error Posting second comment:', postComment2);
-    }
-    const postComment3 = await request(app)
+     await request(app)
       .post('/api/v1/posts/gif/comment/4')
       .set('Authorization', `Bearer ${token}`)
       .send({
         comment: 'Good Picture!',
       });
-
-    if (!postComment3) {
-      console.log('Error Posting third comment:', postComment3);
-    }
   });
 
   it('should delete a comment successfully', async () => {
@@ -664,10 +608,7 @@ describe('Admin delete comment', () => {
       email: 'dave@gmail.com',
       password: 'password123',
     });
-    if (!res.body || !res.body.data || !res.body.data.token) {
-      console.log('Error signing in:', res.body);
-    }
-
+   
     token = res.body.data.token || res.body.token;
   });
 

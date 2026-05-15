@@ -15,3 +15,12 @@ export enum UserRoles {
   Admin = 'admin',
   Employee = 'employee',
 }
+
+export enum ArticleCategory {
+  Business = 'business',
+  Education = 'education',
+  Sports = 'sports',
+  Technology = 'technology',
+  Entertainment = 'entertainment',
+  Uncategorized = 'uncategorized',
+}
