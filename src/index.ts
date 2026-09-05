@@ -10,9 +10,9 @@ dotenv.config();
 
 const app = express();
 
+app.use(cors({origin: process.env.FRONTEND_URL, credentials: true})); // Allow CORS for the frontend app
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors());
 
 app.use('/api/v1/users', usersV1);
 app.use('/api/v1/posts', postsV1);
