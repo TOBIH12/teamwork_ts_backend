@@ -208,7 +208,7 @@ export default class UserControllers {
         to: userEmail,
         subject: 'Password Reset Request',
         html: emailTemplate({
-          content: `You requested a password reset. Click the button below to reset your password. This link will expire in 5 minutes.`,
+          content: `You requested a password reset. Click the button below to reset your password. This link will expire in 5 minutes. If you did not request this, you can safely ignore this email.`,
           buttonUrl: resetUrl,
           buttonText: 'Reset Password',
         }),
