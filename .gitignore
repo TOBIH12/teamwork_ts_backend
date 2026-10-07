@@ -23,5 +23,3 @@ Thumbs.db
 
 # Optional: coverage / testing
 coverage/
-
-database.json
