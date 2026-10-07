@@ -66,7 +66,6 @@ describe('Post GIFS Endpoint', () => {
         ),
         'Lookman-Osimhen.jpg'
       );
-      console.log('Response body:', res.body); // Log the response body for debugging
     expect(res.status).to.equal(201);
     expect(res.body).to.have.property('status', 'success');
     expect(res.body.data).to.have.property('gifId');
