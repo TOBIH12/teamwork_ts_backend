@@ -1,0 +1,29 @@
+{
+    "dev": {
+        "driver": "pg",
+        "user": "postgres",
+        "password": "Letlovelead",
+        "host": "localhost",
+        "port": 5432,
+        "database": "teamwork_ts"
+    },
+
+    "test": {
+        "driver": "pg",
+        "user": "postgres",
+        "password": "Letlovelead",
+        "host": "localhost",
+        "port": 5432,
+        "database": "teamwork_ts_test"
+    },
+
+    "prod": {
+         "driver": "pg",
+         "host": { "ENV": "DB_HOST" },
+         "user": { "ENV": "DB_USER" },
+         "password": { "ENV": "DB_PASSWORD" },
+         "database": { "ENV": "DB_NAME" },
+         "port": { "ENV": "DB_PORT" },
+         "ssl": true
+    }
+}
