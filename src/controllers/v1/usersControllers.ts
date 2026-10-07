@@ -131,7 +131,7 @@ export default class UserControllers {
         });
       }
 
-      const { user_id, first_name, last_name, job_role } = user;
+      const { user_id, first_name, last_name, job_role, user_img } = user;
 
       const token = jwt.sign(
         {
@@ -153,6 +153,7 @@ export default class UserControllers {
           firstName: first_name,
           lastName: last_name,
           jobRole: job_role,
+          userImg: user_img,
         },
       });
     } catch (error: unknown) {

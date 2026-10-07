@@ -120,6 +120,7 @@ describe('Sign In User Endpoint', () => {
     expect(res.body.data).to.have.property('token');
     expect(res.body.data).to.have.property('userId');
     expect(res.body.data).to.have.property('jobRole', 'employee');
+    expect(res.body.data).to.have.property('userImg');
   });
 
   // Check for incorrect email or password
