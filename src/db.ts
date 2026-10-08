@@ -22,8 +22,18 @@ const configs: Record<string, any> = {
     password: process.env.TEST_DB_PASSWORD,
     port: Number(process.env.TEST_DB_PORT) || 5432,
   },
+  prod: {
+    user: process.env.DB_USER,
+    host: process.env.DB_HOST,
+    database: process.env.DB_NAME,
+    password: process.env.DB_PASSWORD,
+    port: Number(process.env.DB_PORT) || 5432,
+    ssl: {
+      rejectUnauthorized: false,
+    }
+  }
 };
 
-const pool = new Pool(configs[env]);
+const pool = new Pool(configs[env === "production" ? "prod" : env]);
 
 export default pool;
