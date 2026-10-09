@@ -152,6 +152,7 @@ export default class UserControllers {
           userId: user_id,
           firstName: first_name,
           lastName: last_name,
+          email: userEmail,
           jobRole: job_role,
           userImg: user_img,
         },
