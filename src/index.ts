@@ -17,8 +17,6 @@ const allowedOrigins: string[] = Array.from(
     ])
 )
 
-const frontendPreviewRegex = /^https:\/\/.*-tobi-s-projects-59df0dff\.vercel\.app\$/;
-
 const corsOptions: CorsOptions = {
   origin: (
     origin: string | undefined,
@@ -29,15 +27,17 @@ const corsOptions: CorsOptions = {
     }
 
     const isAllowedStatic = allowedOrigins.includes(origin);
-    const isAllowedPreview = frontendPreviewRegex.test(origin);
+    const isVercelPreview = origin.endsWith('.vercel.app');
 
-    if (isAllowedStatic || isAllowedPreview) {
+    if (isAllowedStatic || isVercelPreview) {
       callback(null, true);
     } else {
       callback(new Error('Blocked by CORS security policy'));
     }
   },
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
   optionsSuccessStatus: 200
 };
 
