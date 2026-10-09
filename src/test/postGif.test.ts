@@ -95,7 +95,7 @@ describe('Delete Gif endpoint', () => {
     const res = await request(app).post('/api/v1/users/signin').send({
       email: 'samuel@gmail.com',
       password: 'password123',
-    }); 
+    });
 
     token = res.body.data.token || res.body.token;
 
@@ -168,7 +168,7 @@ describe('Admin delete gif post endpoint', () => {
 
     token = res.body.data.token || res.body.token;
 
-     await request(app)
+    await request(app)
       .post('/api/v1/posts/post_gif')
       .set('Authorization', `Bearer ${token}`)
       .field('title', 'A friend')
@@ -567,14 +567,14 @@ describe('DELETE Gif comment Endpoint', () => {
 
     token = res.body.data.token || res.body.token;
 
-     await request(app)
+    await request(app)
       .post('/api/v1/posts/gif/comment/1')
       .set('Authorization', `Bearer ${token}`)
       .send({
         comment: 'Nice Picture',
       });
 
-     await request(app)
+    await request(app)
       .post('/api/v1/posts/gif/comment/4')
       .set('Authorization', `Bearer ${token}`)
       .send({
@@ -608,7 +608,7 @@ describe('Admin delete comment', () => {
       email: 'dave@gmail.com',
       password: 'password123',
     });
-   
+
     token = res.body.data.token || res.body.token;
   });
 

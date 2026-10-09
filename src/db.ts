@@ -30,10 +30,10 @@ const configs: Record<string, any> = {
     port: Number(process.env.DB_PORT) || 5432,
     ssl: {
       rejectUnauthorized: false,
-    }
-  }
+    },
+  },
 };
 
-const pool = new Pool(configs[env === "production" ? "prod" : env]);
+const pool = new Pool(configs[env === 'production' ? 'prod' : env]);
 
 export default pool;
