@@ -204,7 +204,7 @@ export default class UserControllers {
         });
       }
 
-      const resetUrl = `${req.protocol}://${req.get('host')}/api/v1/users/resetPassword/${user_id}/${token}`;
+      const resetUrl = `${req.protocol}://${req.get('host')}/auth/reset-password/${user_id}/${token}`;
 
       const emailOptions = {
         to: userEmail,
