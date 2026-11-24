@@ -142,7 +142,7 @@ export default class UserControllers {
           jobRole: job_role,
         },
         process.env.JWT_SECRET as string,
-        { expiresIn: '1d' }
+        { expiresIn: '10h' }
       );
 
       return res.status(200).json({
